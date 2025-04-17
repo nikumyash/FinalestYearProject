@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Inference;
+using Unity.MLAgents.Policies;
 using System.Text;
 
 public class GameManager : MonoBehaviour
@@ -11,17 +13,23 @@ public class GameManager : MonoBehaviour
     // Singleton instance
     public static GameManager Instance { get; private set; }
 
-    // Environment parameters
+    // Game configuration from JSON
     [System.Serializable]
-    public class EnvironmentParameters
+    public class Lesson
     {
-        public float lesson;
-        public float level_index;
-        public float num_foodballs;
+        public string name;
+        public float num_wallballs;
         public float num_runners;
         public float num_taggers;
         public float num_freezeballs;
         public float time_limit;
+    }
+
+    [System.Serializable]
+    public class EnvironmentConfig
+    {
+        public List<Lesson> lessons = new List<Lesson>();
+        public int currentLesson;
     }
 
     // Game stats
@@ -44,14 +52,15 @@ public class GameManager : MonoBehaviour
     }
 
     // Event declarations
-    public event Action<EnvironmentParameters> OnEnvironmentParametersLoaded;
+    public event Action<Lesson> OnLessonLoaded;
     public event Action OnGameStart;
     public event Action OnGameEnd;
     public event Action<GameStats> OnEpisodeEnd;
     public event Action<int, int> OnScoreUpdate;
 
     // Public properties
-    public EnvironmentParameters EnvParams { get; private set; }
+    public EnvironmentConfig Config { get; private set; }
+    public Lesson CurrentLesson { get; private set; }
     public GameStats CurrentStats { get; private set; }
     public int MaxEpisodes { get; private set; } = 5;
     public int CurrentEpisode { get; private set; } = 0;
@@ -76,6 +85,14 @@ public class GameManager : MonoBehaviour
     // Add this list to store stats from each episode
     private List<GameStats> episodeStats = new List<GameStats>();
 
+    
+    // Model assets
+    private NNModel runnerModel;
+    private NNModel taggerModel;
+    
+    // Selected lesson index
+    private int currentLessonIndex = 3; // Default to lesson 3 (Lesson1_hard)
+
     private void Awake()
     {
         // Singleton pattern
@@ -94,19 +111,78 @@ public class GameManager : MonoBehaviour
         CurrentStats = new GameStats();
         
         // Check if Academy exists and set max episodes
-           bool academyExists = Unity.MLAgents.Academy.IsInitialized;
-   if (academyExists)
-   {
-       MaxEpisodes = int.MaxValue;
-       Debug.Log("Academy found, setting unlimited episodes");
-   }
-   else
-   {
-       MaxEpisodes = 5;
-       Debug.Log("Academy not found, setting max episodes to 5");
-   }    
-        // Load environment parameters
-        LoadEnvironmentParameters();
+        bool academyExists = Unity.MLAgents.Academy.IsInitialized;
+        if (academyExists)
+        {
+            MaxEpisodes = int.MaxValue;
+            Debug.Log("Academy found, setting unlimited episodes");
+            
+            // Try to get the lesson from Academy
+            try 
+            {
+                var academyParameters = Academy.Instance.EnvironmentParameters;
+                if (academyParameters.GetWithDefault("lesson", -1) != -1)
+                {
+                    currentLessonIndex = Mathf.FloorToInt(academyParameters.GetWithDefault("lesson", currentLessonIndex));
+                    Debug.Log($"Lesson index from Academy: {currentLessonIndex}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Could not get lesson from Academy: {e.Message}");
+            }
+        }
+        else
+        {
+            MaxEpisodes = 5;
+            Debug.Log("Academy not found, setting max episodes to 5");
+            
+            // Try to get parameters from PlayerPrefs (set by MainMenu)
+            if (PlayerPrefs.HasKey("LessonType"))
+            {
+                currentLessonIndex = PlayerPrefs.GetInt("LessonType", currentLessonIndex);
+                Debug.Log($"Lesson index from MainMenu: {currentLessonIndex}");
+            }
+            
+            if (PlayerPrefs.HasKey("RunnerAgentModel"))
+            {
+                string modelName = PlayerPrefs.GetString("RunnerAgentModel", "");
+                if (!string.IsNullOrEmpty(modelName))
+                {
+                    // Load the model from Resources/Models/Runner folder
+                    runnerModel = Resources.Load<NNModel>($"Models/Runner/{modelName}");
+                    if (runnerModel != null)
+                    {
+                        Debug.Log($"Loaded Runner Model: {modelName}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to load Runner Model: {modelName}");
+                    }
+                }
+            }
+            
+            if (PlayerPrefs.HasKey("TaggerAgentModel"))
+            {
+                string modelName = PlayerPrefs.GetString("TaggerAgentModel", "");
+                if (!string.IsNullOrEmpty(modelName))
+                {
+                    // Load the model from Resources/Models/Tagger folder
+                    taggerModel = Resources.Load<NNModel>($"Models/Tagger/{modelName}");
+                    if (taggerModel != null)
+                    {
+                        Debug.Log($"Loaded Tagger Model: {modelName}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to load Tagger Model: {modelName}");
+                    }
+                }
+            }
+        }
+        
+        // Load lesson configuration
+        LoadLessonConfiguration();
     }
 
     private void Start()
@@ -127,48 +203,64 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void LoadEnvironmentParameters()
+    private void LoadLessonConfiguration()
     {
         try
         {
             TextAsset jsonFile = Resources.Load<TextAsset>("environment_param");
             if (jsonFile != null)
             {
-                EnvParams = JsonUtility.FromJson<EnvironmentParameters>(jsonFile.text);
-                OnEnvironmentParametersLoaded?.Invoke(EnvParams);
-                Debug.Log("Environment parameters loaded successfully");
+                // Parse the new JSON format
+                Config = JsonUtility.FromJson<EnvironmentConfig>(jsonFile.text);
+                
+                // Verify we have lessons
+                if (Config.lessons == null || Config.lessons.Count == 0)
+                {
+                    Debug.LogError("No lessons found in environment_param.json");
+                    SetDefaultLesson();
+                    return;
+                }
+                
+                // Make sure index is valid
+                currentLessonIndex = Mathf.Clamp(currentLessonIndex, 0, Config.lessons.Count - 1);
+                
+                // Set current lesson
+                CurrentLesson = Config.lessons[currentLessonIndex];
+                
+                Debug.Log($"Loaded lesson: {CurrentLesson.name} (index {currentLessonIndex})");
+                Debug.Log($"Parameters: Runners={CurrentLesson.num_runners}, Taggers={CurrentLesson.num_taggers}, " +
+                         $"FreezeBalls={CurrentLesson.num_freezeballs}, WallBalls={CurrentLesson.num_wallballs}, " +
+                         $"TimeLimit={CurrentLesson.time_limit}");
+                
+                OnLessonLoaded?.Invoke(CurrentLesson);
             }
             else
             {
                 Debug.LogError("Failed to load environment_param.json");
-                // Default values if file not found
-                EnvParams = new EnvironmentParameters
-                {
-                    lesson = 1.0f,
-                    level_index = 0,
-                    num_foodballs = 5,
-                    num_runners = 3,
-                    num_taggers = 2,
-                    num_freezeballs = 5,
-                    time_limit = 60
-                };
+                SetDefaultLesson();
             }
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error loading environment parameters: {e.Message}");
-            // Default values if parsing error
-            EnvParams = new EnvironmentParameters
-            {
-                lesson = 1.0f,
-                level_index = 0,
-                num_foodballs = 5,
-                num_runners = 3,
-                num_taggers = 2,
-                num_freezeballs = 5,
-                time_limit = 60
-            };
+            Debug.LogError($"Error loading lesson configuration: {e.Message}");
+            SetDefaultLesson();
         }
+    }
+
+    private void SetDefaultLesson()
+    {
+        // Create default lesson (Lesson1_hard)
+        CurrentLesson = new Lesson
+        {
+            name = "Lesson1_hard",
+            num_wallballs = 10.0f,
+            num_runners = 5.0f,
+            num_taggers = 4.0f,
+            num_freezeballs = 10.0f,
+            time_limit = 90.0f
+        };
+        
+        Debug.Log("Using default lesson (Lesson1_hard)");
     }
 
     public void StartNewEpisode()
@@ -181,7 +273,7 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentEpisode++;
-        RemainingTime = EnvParams.time_limit;
+        RemainingTime = CurrentLesson.time_limit;
         IsGameActive = true;
         
         // Reset stats for new episode
@@ -191,14 +283,15 @@ public class GameManager : MonoBehaviour
         ClearGameObjects();
         
         // Spawn game elements
-        SpawnRunners((int)EnvParams.num_runners);
-        SpawnTaggers((int)EnvParams.num_taggers);
-        SpawnFreezeballs((int)EnvParams.num_freezeballs);
-        SpawnWallballs((int)EnvParams.num_foodballs); // Using num_foodballs for wallballs
+        SpawnRunners((int)CurrentLesson.num_runners);
+        SpawnTaggers((int)CurrentLesson.num_taggers);
+        SpawnFreezeballs((int)CurrentLesson.num_freezeballs);
+        SpawnWallballs((int)CurrentLesson.num_wallballs);
         
         OnGameStart?.Invoke();
     }
 
+    // Reset episode stats, clearing previous episode data
     private void ResetEpisodeStats()
     {
         // Reset only the stats that should be reset per episode
@@ -217,6 +310,7 @@ public class GameManager : MonoBehaviour
         // Note: We don't reset runnersWin and taggersWin as those are cumulative
     }
 
+    // Clear all game objects from previous episode
     private void ClearGameObjects()
     {
         foreach (var runner in runners)
@@ -245,6 +339,7 @@ public class GameManager : MonoBehaviour
         wallballs.Clear();
     }
 
+    // Spawn runners with behavior parameters
     private void SpawnRunners(int count)
     {
         for (int i = 0; i < count; i++)
@@ -253,10 +348,28 @@ public class GameManager : MonoBehaviour
             
             Vector3 spawnPos = GetRandomPositionInBounds(runnerSpawnArea.bounds);
             GameObject runner = Instantiate(runnerPrefab, spawnPos, Quaternion.Euler(0, UnityEngine.Random.Range(0, 360), 0));
+            
+            // Set behavior parameters
+            var behaviorParams = runner.GetComponent<Unity.MLAgents.Policies.BehaviorParameters>();
+            if (behaviorParams != null)
+            {
+                // Set model if available
+                if (runnerModel != null)
+                {
+                    behaviorParams.Model = runnerModel;
+                }
+                else
+                {
+                    // Set to null/none if no model specified
+                    behaviorParams.Model = null;
+                }
+            }
+            
             runners.Add(runner);
         }
     }
 
+    // Spawn taggers with behavior parameters
     private void SpawnTaggers(int count)
     {
         for (int i = 0; i < count; i++)
@@ -265,6 +378,23 @@ public class GameManager : MonoBehaviour
             
             Vector3 spawnPos = GetRandomPositionInBounds(taggerSpawnArea.bounds);
             GameObject tagger = Instantiate(taggerPrefab, spawnPos, Quaternion.Euler(0, UnityEngine.Random.Range(0, 360), 0));
+            
+            // Set behavior parameters
+            var behaviorParams = tagger.GetComponent<Unity.MLAgents.Policies.BehaviorParameters>();
+            if (behaviorParams != null)
+            {
+                // Set model if available
+                if (taggerModel != null)
+                {
+                    behaviorParams.Model = taggerModel;
+                }
+                else
+                {
+                    // Set to null/none if no model specified
+                    behaviorParams.Model = null;
+                }
+            }
+            
             taggers.Add(tagger);
         }
     }
@@ -296,9 +426,12 @@ public class GameManager : MonoBehaviour
     // Helper method to get random position within bounds
     private Vector3 GetRandomPositionInBounds(Bounds bounds)
     {
+        // Fixed y value to avoid spawning inside ground or too high
+        float yPos = bounds.min.y + 1.0f; // Ensure agents are always 1 unit above the minimum height
+        
         return new Vector3(
             UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
-            UnityEngine.Random.Range(bounds.max.y, bounds.max.y),
+            yPos,
             UnityEngine.Random.Range(bounds.min.z, bounds.max.z)
         );
     }
@@ -342,7 +475,7 @@ public class GameManager : MonoBehaviour
         if (!IsGameActive) return;
         
         IsGameActive = false;
-        CurrentStats.episodeLength = EnvParams.time_limit - RemainingTime;
+        CurrentStats.episodeLength = CurrentLesson.time_limit - RemainingTime;
         
         if (runnersWin)
         {
@@ -418,13 +551,13 @@ public class GameManager : MonoBehaviour
     public void NotifyFreezeBallCollected()
     {
         CurrentStats.freezeballsCollected++;
-        CurrentStats.freezeballCollectionPercent = (float)CurrentStats.freezeballsCollected / EnvParams.num_freezeballs;
+        CurrentStats.freezeballCollectionPercent = (float)CurrentStats.freezeballsCollected / CurrentLesson.num_freezeballs;
     }
 
     public void NotifyWallBallCollected()
     {
         CurrentStats.wallballsCollected++;
-        CurrentStats.wallballCollectionPercent = (float)CurrentStats.wallballsCollected / EnvParams.num_foodballs;
+        CurrentStats.wallballCollectionPercent = (float)CurrentStats.wallballsCollected / CurrentLesson.num_wallballs;
     }
 
     public void NotifyWallUsed()
@@ -477,5 +610,15 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError($"Failed to export results: {e.Message}");
         }
+    }
+
+    // Add method to return to main menu
+    public void ReturnToMainMenu()
+    {
+        // Optionally export results before leaving
+        ExportResultsToCSV();
+        
+        // Load main menu scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 } 

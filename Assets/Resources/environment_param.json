@@ -1,9 +1,37 @@
 {
-  "lesson": 1.5,
-  "level_index": 1.0,
-  "num_foodballs": 10.0,
-  "num_runners": 5.0,
-  "num_taggers": 4.0,
-  "num_freezeballs": 10.0,
-  "time_limit": 90.0
-} 
+  "lessons": [
+    {
+      "name": "Lesson0_easy",
+      "num_wallballs": 5.0,
+      "num_runners": 4.0,
+      "num_taggers": 0.0,
+      "num_freezeballs": 0.0,
+      "time_limit": 120.0
+    },
+    {
+      "name": "Lesson0_medium",
+      "num_wallballs": 6.0,
+      "num_runners": 5.0,
+      "num_taggers": 0.0,
+      "num_freezeballs": 0.0,
+      "time_limit": 120.0
+    },
+    {
+      "name": "Lesson1_base",
+      "num_wallballs": 8.0,
+      "num_runners": 4.0,
+      "num_taggers": 2.0,
+      "num_freezeballs": 8.0,
+      "time_limit": 120.0
+    },
+    {
+      "name": "Lesson1_hard",
+      "num_wallballs": 10.0,
+      "num_runners": 5.0,
+      "num_taggers": 4.0,
+      "num_freezeballs": 10.0,
+      "time_limit": 90.0
+    }
+  ],
+  "currentLesson": 3
+}

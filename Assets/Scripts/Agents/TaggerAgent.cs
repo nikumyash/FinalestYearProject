@@ -87,6 +87,7 @@ public class TaggerAgent : Agent
         sensor.AddObservation(transform.position);
         sensor.AddObservation(transform.forward);
         sensor.AddObservation(currentFreezeBalls);
+        sensor.AddObservation(canShoot);
         
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs

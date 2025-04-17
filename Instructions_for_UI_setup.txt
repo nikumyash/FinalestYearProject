@@ -1,0 +1,34 @@
+### UI Setup Instructions
+
+Follow these steps to add the return button and lesson name text to your game UI:
+
+1. Open your Game scene where you already have a Canvas with the Timer and other UI elements.
+
+2. Add a Return Button:
+   - In the Hierarchy, right-click on your Canvas -> UI -> Button
+   - Position it in the bottom left of the screen
+   - Set the Button text to "Return to Menu"
+   - Set the Button color to something that stands out but matches your UI theme
+   - Adjust the size as needed (about 200x50 recommended)
+
+3. Add a Lesson Name Text:
+   - In the Hierarchy, right-click on your Canvas -> UI -> Text - TextMeshPro
+   - Position it in the bottom right of the screen
+   - Set the horizontal and vertical alignment to right and bottom respectively
+   - Clear the default text (it will be set at runtime)
+   - Set font size to match your other UI elements (around 24-28 recommended)
+   - Set color to match your UI theme
+
+4. Connect the UI elements to the UIManager:
+   - Select your UIManager GameObject in the Hierarchy
+   - In the Inspector, find the UIManager component
+   - Connect the references:
+     - Drag the new TextMeshPro text to the "Lesson Name Text" field
+     - Drag the new Button to the "Return To Menu Button" field
+
+5. Test the game:
+   - Enter Play mode
+   - The lesson name should appear in the bottom right
+   - The return button should be clickable and return you to the main menu
+
+That's it! The lesson name will update automatically when the lesson is loaded, and the return button will call the GameManager's ReturnToMainMenu method when clicked. 

@@ -122,7 +122,7 @@ public class RunnerAgent : Agent
         sensor.AddObservation(transform.forward);
         sensor.AddObservation(isFrozen ? 1 : 0);
         sensor.AddObservation(currentWallBalls);
-        
+        sensor.AddObservation(canUseWall);
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs
     }

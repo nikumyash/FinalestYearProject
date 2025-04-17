@@ -10,6 +10,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI taggersWinText;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI episodeText;
+    [SerializeField] private TextMeshProUGUI lessonNameText;
+    [SerializeField] private Button returnToMenuButton;
 
     private void Start()
     {
@@ -18,6 +20,7 @@ public class UIManager : MonoBehaviour
         {
             GameManager.Instance.OnScoreUpdate += UpdateScoreDisplay;
             GameManager.Instance.OnGameStart += OnGameStart;
+            GameManager.Instance.OnLessonLoaded += UpdateLessonDisplay;
         }
         else
         {
@@ -28,6 +31,17 @@ public class UIManager : MonoBehaviour
         UpdateScoreDisplay(0, 0);
         UpdateTimer(0);
         UpdateEpisodeDisplay(0, 5);
+        
+        // Set up return button
+        if (returnToMenuButton != null)
+        {
+            returnToMenuButton.onClick.AddListener(() => {
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.ReturnToMainMenu();
+                }
+            });
+        }
     }
 
     private void OnDestroy()
@@ -37,6 +51,13 @@ public class UIManager : MonoBehaviour
         {
             GameManager.Instance.OnScoreUpdate -= UpdateScoreDisplay;
             GameManager.Instance.OnGameStart -= OnGameStart;
+            GameManager.Instance.OnLessonLoaded -= UpdateLessonDisplay;
+        }
+        
+        // Remove button listener
+        if (returnToMenuButton != null)
+        {
+            returnToMenuButton.onClick.RemoveAllListeners();
         }
     }
 
@@ -86,6 +107,14 @@ public class UIManager : MonoBehaviour
             {
                 episodeText.text = $"Episode: {currentEpisode}/{maxEpisodes}";
             }
+        }
+    }
+    
+    private void UpdateLessonDisplay(GameManager.Lesson lesson)
+    {
+        if (lessonNameText != null && lesson != null)
+        {
+            lessonNameText.text = $"Lesson: {lesson.name}";
         }
     }
 } 
