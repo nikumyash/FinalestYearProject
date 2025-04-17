@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class FreezeBall : MonoBehaviour
 {
-    [SerializeField] private float collectionDistance = 1.5f;
     [SerializeField] private GameObject collectEffect;
     [SerializeField] private GameObject hitEffect;
     [SerializeField] private bool isProjectile = false;

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class WallBall : MonoBehaviour
 {
-    [SerializeField] private float collectionDistance = 1.5f;
     [SerializeField] private GameObject collectEffect;
     
     private bool isCollected = false;

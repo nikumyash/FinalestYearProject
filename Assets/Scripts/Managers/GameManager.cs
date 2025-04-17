@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Unity.MLAgents;
-using Unity.MLAgents.Inference;
 using Unity.MLAgents.Policies;
+using Unity.Sentis;
 using System.Text;
 
 public class GameManager : MonoBehaviour
@@ -87,8 +87,8 @@ public class GameManager : MonoBehaviour
 
     
     // Model assets
-    private NNModel runnerModel;
-    private NNModel taggerModel;
+    private ModelAsset runnerModel;
+    private ModelAsset taggerModel;
     
     // Selected lesson index
     private int currentLessonIndex = 3; // Default to lesson 3 (Lesson1_hard)
@@ -150,7 +150,7 @@ public class GameManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(modelName))
                 {
                     // Load the model from Resources/Models/Runner folder
-                    runnerModel = Resources.Load<NNModel>($"Models/Runner/{modelName}");
+                    runnerModel = Resources.Load<ModelAsset>($"Models/Runner/{modelName}");
                     if (runnerModel != null)
                     {
                         Debug.Log($"Loaded Runner Model: {modelName}");
@@ -168,7 +168,7 @@ public class GameManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(modelName))
                 {
                     // Load the model from Resources/Models/Tagger folder
-                    taggerModel = Resources.Load<NNModel>($"Models/Tagger/{modelName}");
+                    taggerModel = Resources.Load<ModelAsset>($"Models/Tagger/{modelName}");
                     if (taggerModel != null)
                     {
                         Debug.Log($"Loaded Tagger Model: {modelName}");

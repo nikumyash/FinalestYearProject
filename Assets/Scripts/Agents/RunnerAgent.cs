@@ -22,11 +22,6 @@ public class RunnerAgent : Agent
     [SerializeField] private Material normalMaterial;
     [SerializeField] private Material frozenMaterial;
     
-    // Movement variables
-    private float moveX;
-    private float moveZ;
-    private float rotateY;
-    
     // Wall variables
     private int currentWallBalls = 0;
     
@@ -50,8 +45,10 @@ public class RunnerAgent : Agent
     public bool IsFrozen => isFrozen;
     public float WallCooldownPercent => !canUseWall ? wallCooldownTimer / wallCooldown : 0f;
     
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+        
         if (agentMovement == null)
         {
             agentMovement = GetComponent<AgentMovement>();
@@ -92,11 +89,6 @@ public class RunnerAgent : Agent
         isFrozen = false;
         unfreezeCounter = 0f;
         currentWallBalls = 0;
-        
-        // Reset movement
-        moveX = 0f;
-        moveZ = 0f;
-        rotateY = 0f;
         
         // Clear existing freeze effect
         if (freezeEffect != null)

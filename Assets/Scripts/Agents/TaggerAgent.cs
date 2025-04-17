@@ -18,11 +18,6 @@ public class TaggerAgent : Agent
     [Header("References")]
     [SerializeField] private AgentMovement agentMovement;
     
-    // Movement variables
-    private float moveX;
-    private float moveZ;
-    private float rotateY;
-    
     // Freeze ball variables
     public int currentFreezeBalls = 0;
     
@@ -34,8 +29,10 @@ public class TaggerAgent : Agent
     private float shootCooldownTimer = 0f; // Timer to track cooldown
     private bool canShoot = true; // Flag to check if shooting is allowed
     
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+        
         if (agentMovement == null)
         {
             agentMovement = GetComponent<AgentMovement>();
@@ -70,11 +67,6 @@ public class TaggerAgent : Agent
     {
         // Reset agent state
         currentFreezeBalls = 0;
-        
-        // Reset movement
-        moveX = 0f;
-        moveZ = 0f;
-        rotateY = 0f;
         
         // Reset shooting cooldown
         canShoot = true;
