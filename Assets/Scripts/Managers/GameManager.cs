@@ -73,6 +73,9 @@ public class GameManager : MonoBehaviour
     private List<GameObject> freezeballs = new List<GameObject>();
     private List<GameObject> wallballs = new List<GameObject>();
 
+    // Add this list to store stats from each episode
+    private List<GameStats> episodeStats = new List<GameStats>();
+
     private void Awake()
     {
         // Singleton pattern
@@ -198,6 +201,7 @@ public class GameManager : MonoBehaviour
 
     private void ResetEpisodeStats()
     {
+        // Reset only the stats that should be reset per episode
         CurrentStats.time = 0;
         CurrentStats.freezeballsCollected = 0;
         CurrentStats.wallballsCollected = 0;
@@ -209,6 +213,8 @@ public class GameManager : MonoBehaviour
         CurrentStats.wallsUsed = 0;
         CurrentStats.freezeballsUsed = 0;
         CurrentStats.freezeballsHit = 0;
+        
+        // Note: We don't reset runnersWin and taggersWin as those are cumulative
     }
 
     private void ClearGameObjects()
@@ -347,6 +353,27 @@ public class GameManager : MonoBehaviour
             CurrentStats.taggersWin++;
         }
         
+        // Save a copy of the current episode's stats before starting the next episode
+        GameStats episodeStat = new GameStats
+        {
+            runnersWin = runnersWin ? 1 : 0,
+            taggersWin = runnersWin ? 0 : 1,
+            time = CurrentStats.time,
+            freezeballsCollected = CurrentStats.freezeballsCollected,
+            wallballsCollected = CurrentStats.wallballsCollected,
+            totalFreezes = CurrentStats.totalFreezes,
+            totalUnfreezes = CurrentStats.totalUnfreezes,
+            episodeLength = CurrentStats.episodeLength,
+            freezeballCollectionPercent = CurrentStats.freezeballCollectionPercent,
+            wallballCollectionPercent = CurrentStats.wallballCollectionPercent,
+            wallsUsed = CurrentStats.wallsUsed,
+            freezeballsUsed = CurrentStats.freezeballsUsed,
+            freezeballsHit = CurrentStats.freezeballsHit
+        };
+        
+        // Add to our episode stats list
+        episodeStats.Add(episodeStat);
+        
         OnScoreUpdate?.Invoke(CurrentStats.runnersWin, CurrentStats.taggersWin);
         OnEpisodeEnd?.Invoke(CurrentStats);
         OnGameEnd?.Invoke();
@@ -420,18 +447,31 @@ public class GameManager : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         
         // Add headers
-        sb.AppendLine("RunnerWins,TaggerWins,Time,FreezeBallsCollected,WallBallsCollected,TotalFreezes,TotalUnfreezes,EpisodeLength,FreezeBallCollectionPercent,WallBallCollectionPercent,WallsUsed,FreezeBallsUsed,FreezeBallsHit");
+        sb.AppendLine("Episode,RunnerWin,TaggerWin,Time,FreezeBallsCollected,WallBallsCollected,TotalFreezes,TotalUnfreezes,EpisodeLength,FreezeBallCollectionPercent,WallBallCollectionPercent,WallsUsed,FreezeBallsUsed,FreezeBallsHit");
         
-        // Add data
-        sb.AppendLine($"{CurrentStats.runnersWin},{CurrentStats.taggersWin},{CurrentStats.time},{CurrentStats.freezeballsCollected},{CurrentStats.wallballsCollected},{CurrentStats.totalFreezes},{CurrentStats.totalUnfreezes},{CurrentStats.episodeLength},{CurrentStats.freezeballCollectionPercent},{CurrentStats.wallballCollectionPercent},{CurrentStats.wallsUsed},{CurrentStats.freezeballsUsed},{CurrentStats.freezeballsHit}");
+        // Add data for each episode
+        for (int i = 0; i < episodeStats.Count; i++)
+        {
+            GameStats stats = episodeStats[i];
+            sb.AppendLine($"{i+1},{stats.runnersWin},{stats.taggersWin},{stats.time},{stats.freezeballsCollected},{stats.wallballsCollected},{stats.totalFreezes},{stats.totalUnfreezes},{stats.episodeLength},{stats.freezeballCollectionPercent},{stats.wallballCollectionPercent},{stats.wallsUsed},{stats.freezeballsUsed},{stats.freezeballsHit}");
+        }
         
-        // Define file path
-        string filePath = Path.Combine(Application.persistentDataPath, $"FreezeTagResults_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        // Add summary row
+        sb.AppendLine("------- Summary -------");
+        sb.AppendLine($"Total,{CurrentStats.runnersWin},{CurrentStats.taggersWin},{CurrentStats.time},{CurrentStats.freezeballsCollected},{CurrentStats.wallballsCollected},{CurrentStats.totalFreezes},{CurrentStats.totalUnfreezes},{CurrentStats.episodeLength},{CurrentStats.freezeballCollectionPercent},{CurrentStats.wallballCollectionPercent},{CurrentStats.wallsUsed},{CurrentStats.freezeballsUsed},{CurrentStats.freezeballsHit}");
+        
+        // Define file path with timestamp
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string filePath = Path.Combine(Application.persistentDataPath, $"FreezeTagResults_{timestamp}.csv");
         
         try
         {
+            // Write to file
             File.WriteAllText(filePath, sb.ToString());
             Debug.Log($"Results exported to {filePath}");
+            
+            // Also log the path to the Unity Editor console
+            Debug.Log($"CSV file location: {Application.persistentDataPath}");
         }
         catch (Exception e)
         {
