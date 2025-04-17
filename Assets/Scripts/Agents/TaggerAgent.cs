@@ -11,8 +11,9 @@ public class TaggerAgent : Agent
     [SerializeField] private int maxFreezeBalls = 3;
     [SerializeField] private GameObject freezeBallPrefab;
     [SerializeField] private Transform freezeBallSpawnPoint;
-    [SerializeField] private float freezeBallSpeed = 8f;
+    [SerializeField] private float freezeBallSpeed = 3f;
     [SerializeField] private float freezeBallLifetime = 3f;
+    [SerializeField] private float shootCooldown = 1.0f; // Cooldown time in seconds
     
     [Header("References")]
     [SerializeField] private AgentMovement agentMovement;
@@ -23,12 +24,15 @@ public class TaggerAgent : Agent
     private float rotateY;
     
     // Freeze ball variables
-    private int currentFreezeBalls = 0;
+    public int currentFreezeBalls = 0;
     
     // Events
     public delegate void TaggerEvent();
     public event TaggerEvent OnFreezeBallCollected;
     public event TaggerEvent OnFreezeBallShot;
+    
+    private float shootCooldownTimer = 0f; // Timer to track cooldown
+    private bool canShoot = true; // Flag to check if shooting is allowed
     
     private void Awake()
     {
@@ -71,6 +75,10 @@ public class TaggerAgent : Agent
         moveX = 0f;
         moveZ = 0f;
         rotateY = 0f;
+        
+        // Reset shooting cooldown
+        canShoot = true;
+        shootCooldownTimer = 0f;
     }
     
     public override void CollectObservations(VectorSensor sensor)
@@ -176,7 +184,7 @@ public class TaggerAgent : Agent
         }
         
         // Shooting
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space) && canShoot)
         {
             discreteActionsOut[3] = 1; // Shoot
         }
@@ -186,18 +194,46 @@ public class TaggerAgent : Agent
         }
     }
     
+    private void Update()
+    {
+        // Update cooldown timer
+        if (!canShoot)
+        {
+            shootCooldownTimer -= Time.deltaTime;
+            if (shootCooldownTimer <= 0f)
+            {
+                canShoot = true;
+            }
+        }
+    }
+    
     private void ShootFreezeBall()
     {
-        if (currentFreezeBalls <= 0) return;
+        // Check if we can shoot and have ammo
+        if (!canShoot || currentFreezeBalls <= 0) return;
         
+        // Set cooldown
+        canShoot = false;
+        shootCooldownTimer = shootCooldown;
+        
+        // Reduce ammo
         currentFreezeBalls--;
+        
+        Debug.Log($"Tagger shooting freeze ball. Remaining: {currentFreezeBalls}");
         
         // Create freeze ball projectile
         if (freezeBallSpawnPoint != null && freezeBallPrefab != null)
         {
             GameObject freezeBall = Instantiate(freezeBallPrefab, freezeBallSpawnPoint.position, freezeBallSpawnPoint.rotation);
-            Rigidbody rb = freezeBall.GetComponent<Rigidbody>();
             
+            // Set it as a projectile
+            FreezeBall freezeBallComponent = freezeBall.GetComponent<FreezeBall>();
+            if (freezeBallComponent != null)
+            {
+                freezeBallComponent.SetAsProjectile(true);
+            }
+            
+            Rigidbody rb = freezeBall.GetComponent<Rigidbody>();
             if (rb != null)
             {
                 // Launch the freeze ball

@@ -10,10 +10,26 @@ public class FreezeBall : MonoBehaviour
     [SerializeField] private bool isProjectile = false;
     
     private bool isCollected = false;
+    private bool hasHit = false;
+    
+    public void SetAsProjectile(bool isProj)
+    {
+        isProjectile = isProj;
+        
+        // Change tag to differentiate from collectible freeze balls
+        if (isProj)
+        {
+            gameObject.tag = "FreezeBallProjectile";
+        }
+        else
+        {
+            gameObject.tag = "FreezeBall";
+        }
+    }
     
     private void OnTriggerEnter(Collider other)
     {
-        if (isCollected) return;
+        if (isCollected || hasHit) return;
         
         // If this is a collectible freeze ball (not a projectile)
         if (!isProjectile)
@@ -31,35 +47,32 @@ public class FreezeBall : MonoBehaviour
         // If this is a projectile freeze ball
         else
         {
-            // Handle hitting a runner
+            // Handle hitting a runner - only when it's a projectile
             RunnerAgent runner = other.GetComponent<RunnerAgent>();
             if (runner != null && !runner.IsFrozen)
             {
+                hasHit = true;
                 PlayHitEffect();
                 
-                // Object will be destroyed by the RunnerAgent component
+                // Freeze the runner
+                runner.Freeze();
+                
+                // Notify game manager about freeze ball hit
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.NotifyFreezeBallHit();
+                }
+                
+                // Destroy this projectile
+                Destroy(gameObject);
             }
             // Handle collision with walls or other objects
             else if (!other.CompareTag("Tagger") && !other.CompareTag("FreezeBall") && !other.CompareTag("WallBall"))
             {
+                hasHit = true;
                 PlayHitEffect();
                 Destroy(gameObject);
             }
-        }
-    }
-    
-    public void SetAsProjectile(bool isProj)
-    {
-        isProjectile = isProj;
-        
-        // Change layer or tag to differentiate from collectible freeze balls
-        if (isProj)
-        {
-            gameObject.tag = "FreezeBallProjectile";
-        }
-        else
-        {
-            gameObject.tag = "FreezeBall";
         }
     }
     

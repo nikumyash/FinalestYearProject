@@ -14,15 +14,13 @@ public class RunnerAgent : Agent
     [SerializeField] private GameObject wallPrefab;
     [SerializeField] private Transform wallSpawnPoint;
     [SerializeField] private GameObject freezeEffectPrefab;
+    [SerializeField] private float wallCooldown = 1.0f; // Cooldown time in seconds
     
     [Header("References")]
     [SerializeField] private AgentMovement agentMovement;
     [SerializeField] private Renderer agentRenderer;
-[SerializeField] private Color normalColor = Color.blue;
-[SerializeField] private Color frozenColor = Color.cyan;
-private Material agentMaterial;
-
-
+    [SerializeField] private Material normalMaterial;
+    [SerializeField] private Material frozenMaterial;
     
     // Movement variables
     private float moveX;
@@ -37,6 +35,10 @@ private Material agentMaterial;
     private float unfreezeCounter = 0f;
     private GameObject freezeEffect;
     
+    // Wall cooldown variables
+    private float wallCooldownTimer = 0f; // Timer to track cooldown
+    private bool canUseWall = true; // Flag to check if wall creation is allowed
+    
     // Events
     public delegate void RunnerEvent();
     public event RunnerEvent OnFreeze;
@@ -46,6 +48,7 @@ private Material agentMaterial;
     
     // Properties
     public bool IsFrozen => isFrozen;
+    public float WallCooldownPercent => !canUseWall ? wallCooldownTimer / wallCooldown : 0f;
     
     private void Awake()
     {
@@ -57,7 +60,6 @@ private Material agentMaterial;
                 agentMovement = gameObject.AddComponent<AgentMovement>();
             }
         }
-
     }
     
     private void Start()
@@ -70,23 +72,6 @@ private Material agentMaterial;
             OnWallBallCollected += GameManager.Instance.NotifyWallBallCollected;
             OnWallUsed += GameManager.Instance.NotifyWallUsed;
         }
-        // In Awake() or Start() add:
-    if (agentRenderer != null)
-    {
-        agentMaterial = agentRenderer.material;
-    }
-
-    // In Freeze() method, replace freezeEffectPrefab code with:
-    if (agentRenderer != null && agentMaterial != null)
-    {
-        agentMaterial.color = frozenColor;
-    }
-
-    // In Unfreeze() method, replace freezeEffect code with:
-    if (agentRenderer != null && agentMaterial != null)
-    {
-        agentMaterial.color = normalColor;
-    }
     }
     
     private void OnDestroy()
@@ -119,6 +104,15 @@ private Material agentMaterial;
             Destroy(freezeEffect);
             freezeEffect = null;
         }
+        
+        if (agentRenderer != null && normalMaterial != null)
+        {
+            agentRenderer.material = normalMaterial;
+        }
+        
+        // Reset wall cooldown
+        canUseWall = true;
+        wallCooldownTimer = 0f;
     }
     
     public override void CollectObservations(VectorSensor sensor)
@@ -174,8 +168,8 @@ private Material agentMaterial;
             agentMovement.MoveRight();
         }
         
-        // Handle wall use
-        if (useWallAction == 1 && currentWallBalls > 0)
+        // Handle wall use - respect cooldown
+        if (useWallAction == 1 && currentWallBalls > 0 && canUseWall)
         {
             UseWall();
         }
@@ -227,8 +221,8 @@ private Material agentMaterial;
             discreteActionsOut[2] = 0; // None
         }
         
-        // Wall
-        if (Input.GetKey(KeyCode.Space))
+        // Wall creation - only allow if not in cooldown
+        if (Input.GetKey(KeyCode.Space) && canUseWall)
         {
             discreteActionsOut[3] = 1; // Use Wall
         }
@@ -281,9 +275,17 @@ private Material agentMaterial;
     
     private void UseWall()
     {
-        if (currentWallBalls <= 0) return;
+        // Check if we can use wall and have wall balls
+        if (!canUseWall || currentWallBalls <= 0) return;
         
+        // Set cooldown
+        canUseWall = false;
+        wallCooldownTimer = wallCooldown;
+        
+        // Reduce wall ball count
         currentWallBalls--;
+        
+        Debug.Log($"Runner creating wall. Remaining wall balls: {currentWallBalls}");
         
         // Create wall at spawn point
         if (wallSpawnPoint != null && wallPrefab != null)
@@ -312,6 +314,11 @@ private Material agentMaterial;
         // Stop all movement
         agentMovement.StopMovement();
         
+        if (agentRenderer != null && frozenMaterial != null)
+        {
+            agentRenderer.material = frozenMaterial;
+        }
+        
         OnFreeze?.Invoke();
     }
     
@@ -327,6 +334,11 @@ private Material agentMaterial;
         {
             Destroy(freezeEffect);
             freezeEffect = null;
+        }
+        
+        if (agentRenderer != null && normalMaterial != null)
+        {
+            agentRenderer.material = normalMaterial;
         }
         
         OnUnfreeze?.Invoke();
@@ -354,18 +366,6 @@ private Material agentMaterial;
             Freeze();
         }
         
-        // Check for freeze ball
-        if (other.CompareTag("FreezeBall") && !isFrozen)
-        {
-            Freeze();
-            Destroy(other.gameObject);
-            
-            // Notify game manager about freeze ball hit
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.NotifyFreezeBallHit();
-            }
-        }
     }
     
     private void OnDrawGizmosSelected()
@@ -374,4 +374,18 @@ private Material agentMaterial;
         Gizmos.color = isFrozen ? Color.red : Color.green;
         Gizmos.DrawWireSphere(transform.position, freezeRange);
     }
+    
+    private void Update()
+    {
+        // Update cooldown timer for wall usage
+        if (!canUseWall)
+        {
+            wallCooldownTimer -= Time.deltaTime;
+            if (wallCooldownTimer <= 0f)
+            {
+                canUseWall = true;
+            }
+        }
+    }
+    
 } 
