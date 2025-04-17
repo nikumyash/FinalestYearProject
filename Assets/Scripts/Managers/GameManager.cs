@@ -392,6 +392,13 @@ public class GameManager : MonoBehaviour
             }
             
             runners.Add(runner);
+            
+            // After creating a runner
+            AgentCameraController cameraController = runner.GetComponentInChildren<AgentCameraController>();
+            if (cameraController != null && CameraSystemManager.Instance != null)
+            {
+                CameraSystemManager.Instance.RegisterAgentCamera(cameraController);
+            }
         }
     }
 
@@ -438,6 +445,13 @@ public class GameManager : MonoBehaviour
             }
             
             taggers.Add(tagger);
+            
+            // After creating a tagger
+            AgentCameraController cameraController = tagger.GetComponentInChildren<AgentCameraController>();
+            if (cameraController != null && CameraSystemManager.Instance != null)
+            {
+                CameraSystemManager.Instance.RegisterAgentCamera(cameraController);
+            }
         }
     }
 
