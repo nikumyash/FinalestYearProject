@@ -15,6 +15,7 @@ public class RunnerAgent : Agent
     [SerializeField] private Transform wallSpawnPoint;
     [SerializeField] private GameObject freezeEffectPrefab;
     [SerializeField] private float wallCooldown = 1.0f; // Cooldown time in seconds
+    [SerializeField] private GameObject unfreezeRangeIndicator; // Reference to the unfreeze range indicator child object
     
     [Header("References")]
     [SerializeField] private AgentMovement agentMovement;
@@ -57,6 +58,12 @@ public class RunnerAgent : Agent
                 agentMovement = gameObject.AddComponent<AgentMovement>();
             }
         }
+        
+        // Make sure the unfreeze range indicator is initially disabled
+        if (unfreezeRangeIndicator != null)
+        {
+            unfreezeRangeIndicator.SetActive(false);
+        }
     }
     
     private void Start()
@@ -95,6 +102,12 @@ public class RunnerAgent : Agent
         {
             Destroy(freezeEffect);
             freezeEffect = null;
+        }
+        
+        // Hide unfreeze range indicator
+        if (unfreezeRangeIndicator != null)
+        {
+            unfreezeRangeIndicator.SetActive(false);
         }
         
         if (agentRenderer != null && normalMaterial != null)
@@ -303,6 +316,18 @@ public class RunnerAgent : Agent
             freezeEffect.transform.SetParent(transform);
         }
         
+        // Show unfreeze range indicator
+        if (unfreezeRangeIndicator != null)
+        {
+            unfreezeRangeIndicator.SetActive(true);
+            // Update scale to match the freeze range if needed
+            unfreezeRangeIndicator.transform.localScale = new Vector3(
+                freezeRange * 2, 
+                freezeRange * 2, 
+                freezeRange * 2
+            );
+        }
+        
         // Stop all movement
         agentMovement.StopMovement();
         
@@ -326,6 +351,12 @@ public class RunnerAgent : Agent
         {
             Destroy(freezeEffect);
             freezeEffect = null;
+        }
+        
+        // Hide unfreeze range indicator
+        if (unfreezeRangeIndicator != null)
+        {
+            unfreezeRangeIndicator.SetActive(false);
         }
         
         if (agentRenderer != null && normalMaterial != null)
