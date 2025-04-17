@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 8
+    VectorObservationSize: 9
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -238,6 +238,7 @@ MonoBehaviour:
     type: 3}
   wallSpawnPoint: {fileID: 832266170124012586}
   freezeEffectPrefab: {fileID: 0}
+  wallCooldown: 1
   agentMovement: {fileID: 0}
   agentRenderer: {fileID: 2538139005652365486}
   normalMaterial: {fileID: 2100000, guid: 2fd059f4c6434d741beb28271c1ad65c, type: 2}

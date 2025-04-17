@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 7
+    VectorObservationSize: 8
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -206,7 +206,9 @@ MonoBehaviour:
   freezeBallSpawnPoint: {fileID: 4372746265412333326}
   freezeBallSpeed: 8
   freezeBallLifetime: 3
+  shootCooldown: 1
   agentMovement: {fileID: 0}
+  currentFreezeBalls: 0
 --- !u!114 &1473124050258691960
 MonoBehaviour:
   m_ObjectHideFlags: 0
