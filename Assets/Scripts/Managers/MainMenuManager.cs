@@ -11,6 +11,7 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown lessonDropdown;
     [SerializeField] private TMP_InputField runnerModelInput;
     [SerializeField] private TMP_InputField taggerModelInput;
+    [SerializeField] private TMP_Dropdown heuristicModeDropdown;
     [SerializeField] private Button playButton;
     
     // Lesson configuration
@@ -21,7 +22,7 @@ public class MainMenuManager : MonoBehaviour
         // Load lesson names from the environment_param.json file
         LoadLessonNames();
         
-        // Set up dropdown with lesson options
+        // Set up lesson dropdown with options
         if (lessonDropdown != null)
         {
             lessonDropdown.ClearOptions();
@@ -43,6 +44,25 @@ public class MainMenuManager : MonoBehaviour
             }
         }
         
+        // Set up heuristic mode dropdown
+        if (heuristicModeDropdown != null)
+        {
+            // Clear existing options and add our three modes
+            heuristicModeDropdown.ClearOptions();
+            List<string> heuristicOptions = new List<string> { "None", "Runner", "Tagger" };
+            heuristicModeDropdown.AddOptions(heuristicOptions);
+            
+            // Select previous value if available
+            if (PlayerPrefs.HasKey("HeuristicMode"))
+            {
+                int savedMode = PlayerPrefs.GetInt("HeuristicMode", 0);
+                heuristicModeDropdown.value = Mathf.Clamp(savedMode, 0, heuristicOptions.Count - 1);
+            }
+            
+            // Initially disable the dropdown (will enable/disable based on model inputs)
+            heuristicModeDropdown.interactable = false;
+        }
+        
         // Load previous values for inputs if available
         if (runnerModelInput != null && PlayerPrefs.HasKey("RunnerAgentModel"))
         {
@@ -54,10 +74,39 @@ public class MainMenuManager : MonoBehaviour
             taggerModelInput.text = PlayerPrefs.GetString("TaggerAgentModel", "");
         }
         
-        // Set up play button
+        // Set up play button and input field events
         if (playButton != null)
         {
             playButton.onClick.AddListener(StartGame);
+        }
+        
+        // Add listeners to model input fields to toggle heuristic dropdown availability
+        if (runnerModelInput != null && taggerModelInput != null)
+        {
+            runnerModelInput.onValueChanged.AddListener((_) => UpdateHeuristicDropdownState());
+            taggerModelInput.onValueChanged.AddListener((_) => UpdateHeuristicDropdownState());
+            
+            // Initialize dropdown state
+            UpdateHeuristicDropdownState();
+        }
+    }
+    
+    // Updates the heuristic mode dropdown's interactable state based on model inputs
+    private void UpdateHeuristicDropdownState()
+    {
+        if (heuristicModeDropdown != null && runnerModelInput != null && taggerModelInput != null)
+        {
+            bool hasRunnerModel = !string.IsNullOrEmpty(runnerModelInput.text);
+            bool hasTaggerModel = !string.IsNullOrEmpty(taggerModelInput.text);
+            
+            // Only enable if both model inputs aren't empty
+            heuristicModeDropdown.interactable = hasRunnerModel && hasTaggerModel;
+            
+            // If dropdown is disabled, reset its value to "None" (0)
+            if (!heuristicModeDropdown.interactable && heuristicModeDropdown.value != 0)
+            {
+                heuristicModeDropdown.value = 0;
+            }
         }
     }
     
@@ -129,6 +178,19 @@ public class MainMenuManager : MonoBehaviour
         {
             PlayerPrefs.SetString("TaggerAgentModel", taggerModelInput.text);
             Debug.Log($"Tagger Agent Model: {taggerModelInput.text}");
+        }
+        
+        // Save heuristic mode
+        if (heuristicModeDropdown != null && heuristicModeDropdown.interactable)
+        {
+            int heuristicMode = heuristicModeDropdown.value;
+            PlayerPrefs.SetInt("HeuristicMode", heuristicMode);
+            Debug.Log($"Heuristic Mode: {heuristicModeDropdown.options[heuristicMode].text}");
+        }
+        else
+        {
+            // Set to "None" (0) if dropdown is disabled
+            PlayerPrefs.SetInt("HeuristicMode", 0);
         }
         
         // Save preferences and load game scene

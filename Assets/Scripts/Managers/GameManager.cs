@@ -90,6 +90,9 @@ public class GameManager : MonoBehaviour
     private ModelAsset runnerModel;
     private ModelAsset taggerModel;
     
+    // Heuristic mode settings
+    private int heuristicMode = 0; // 0: None, 1: Runner, 2: Tagger
+    
     // Selected lesson index
     private int currentLessonIndex = 3; // Default to lesson 3 (Lesson1_hard)
 
@@ -178,6 +181,13 @@ public class GameManager : MonoBehaviour
                         Debug.LogWarning($"Failed to load Tagger Model: {modelName}");
                     }
                 }
+            }
+            
+            // Get heuristic mode setting
+            if (PlayerPrefs.HasKey("HeuristicMode"))
+            {
+                heuristicMode = PlayerPrefs.GetInt("HeuristicMode", 0);
+                Debug.Log($"Heuristic Mode: {heuristicMode} (0: None, 1: Runner, 2: Tagger)");
             }
         }
         
@@ -342,6 +352,14 @@ public class GameManager : MonoBehaviour
     // Spawn runners with behavior parameters
     private void SpawnRunners(int count)
     {
+        // Select one random runner for heuristic mode if enabled
+        int heuristicRunnerIndex = -1;
+        if (heuristicMode == 1 && count > 0)
+        {
+            heuristicRunnerIndex = UnityEngine.Random.Range(0, count);
+            Debug.Log($"Runner {heuristicRunnerIndex} will be in heuristic mode");
+        }
+        
         for (int i = 0; i < count; i++)
         {
             if (runnerSpawnArea == null) break;
@@ -363,6 +381,14 @@ public class GameManager : MonoBehaviour
                     // Set to null/none if no model specified
                     behaviorParams.Model = null;
                 }
+                
+                // If this is the chosen heuristic runner, set behavior type to heuristic
+                if (i == heuristicRunnerIndex)
+                {
+                    behaviorParams.BehaviorType = Unity.MLAgents.Policies.BehaviorType.HeuristicOnly;
+                    runner.name = "Runner_Heuristic";
+                    Debug.Log("Runner set to heuristic mode");
+                }
             }
             
             runners.Add(runner);
@@ -372,6 +398,14 @@ public class GameManager : MonoBehaviour
     // Spawn taggers with behavior parameters
     private void SpawnTaggers(int count)
     {
+        // Select one random tagger for heuristic mode if enabled
+        int heuristicTaggerIndex = -1;
+        if (heuristicMode == 2 && count > 0)
+        {
+            heuristicTaggerIndex = UnityEngine.Random.Range(0, count);
+            Debug.Log($"Tagger {heuristicTaggerIndex} will be in heuristic mode");
+        }
+        
         for (int i = 0; i < count; i++)
         {
             if (taggerSpawnArea == null) break;
@@ -392,6 +426,14 @@ public class GameManager : MonoBehaviour
                 {
                     // Set to null/none if no model specified
                     behaviorParams.Model = null;
+                }
+                
+                // If this is the chosen heuristic tagger, set behavior type to heuristic
+                if (i == heuristicTaggerIndex)
+                {
+                    behaviorParams.BehaviorType = Unity.MLAgents.Policies.BehaviorType.HeuristicOnly;
+                    tagger.name = "Tagger_Heuristic";
+                    Debug.Log("Tagger set to heuristic mode");
                 }
             }
             
