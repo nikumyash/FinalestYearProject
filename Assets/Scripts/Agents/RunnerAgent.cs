@@ -35,6 +35,14 @@ public class RunnerAgent : Agent
     private float wallCooldownTimer = 0f; // Timer to track cooldown
     private bool canUseWall = true; // Flag to check if wall creation is allowed
     
+    // Added fields for freeze time tracking
+    private float freezeStartTime = 0f;
+    private float currentFreezeTime = 0f;
+    
+    // Added fields for survival time tracking
+    private float lastUnfreezeTime = 0f;
+    private bool hasSurvivalTimerStarted = false;
+    
     // Events
     public delegate void RunnerEvent();
     public event RunnerEvent OnFreeze;
@@ -49,6 +57,9 @@ public class RunnerAgent : Agent
     protected override void Awake()
     {
         base.Awake();
+        
+        // Ensure this agent has the "Runner" tag
+        gameObject.tag = "Runner";
         
         if (agentMovement == null)
         {
@@ -96,6 +107,10 @@ public class RunnerAgent : Agent
         isFrozen = false;
         unfreezeCounter = 0f;
         currentWallBalls = 0;
+        
+        // Start tracking survival time from episode beginning
+        lastUnfreezeTime = Time.time;
+        hasSurvivalTimerStarted = true;
         
         // Clear existing freeze effect
         if (freezeEffect != null)
@@ -242,6 +257,9 @@ public class RunnerAgent : Agent
         // Check if frozen and handle unfreezing logic
         if (isFrozen)
         {
+            // Update total freeze time
+            currentFreezeTime += Time.fixedDeltaTime;
+            
             // Check for nearby unfreezing runners
             CheckForUnfreeze();
         }
@@ -273,6 +291,19 @@ public class RunnerAgent : Agent
         }
         else
         {
+            // Check if there was an unfreeze attempt in progress that's now interrupted
+            if (unfreezeCounter > 0)
+            {
+                // Notify GameManager about an unsuccessful unfreeze attempt
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.NotifyUnsuccessfulUnfreezeAttempt();
+                }
+                
+                // Log the interrupted unfreeze attempt
+                Debug.Log($"Unfreeze attempt interrupted at {unfreezeCounter:F2}/{unfreezeTime} seconds");
+            }
+            
             // Reset counter if no runner in range
             unfreezeCounter = 0f;
         }
@@ -306,8 +337,30 @@ public class RunnerAgent : Agent
     {
         if (isFrozen) return;
         
+        // If survival timer was active, calculate survival time and report it
+        if (hasSurvivalTimerStarted)
+        {
+            float survivalTime = Time.time - lastUnfreezeTime;
+            
+            // Report survival time to GameManager
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.UpdateSurvivalTimeAfterFreeze(survivalTime);
+            }
+            
+            // Log survival time
+            Debug.Log($"Runner survived for {survivalTime:F2} seconds since last unfreeze");
+            
+            // Stop survival timer while frozen
+            hasSurvivalTimerStarted = false;
+        }
+        
         isFrozen = true;
         unfreezeCounter = 0f;
+        
+        // Start tracking freeze time
+        freezeStartTime = Time.time;
+        currentFreezeTime = 0f;
         
         // Spawn freeze effect
         if (freezeEffectPrefab != null)
@@ -343,8 +396,25 @@ public class RunnerAgent : Agent
     {
         if (!isFrozen) return;
         
+        // Calculate total freeze time before unfreezing
+        float totalFreezeTime = currentFreezeTime;
+        
         isFrozen = false;
         unfreezeCounter = 0f;
+        
+        // Start tracking survival time after being unfrozen
+        lastUnfreezeTime = Time.time;
+        hasSurvivalTimerStarted = true;
+        
+        // Update freeze time stats in GameManager
+        if (GameManager.Instance != null)
+        {
+            // Add to total time spent freezing
+            GameManager.Instance.AddFreezeTime(totalFreezeTime);
+            
+            // Update fastest unfreeze time if this one was faster
+            GameManager.Instance.CheckFastestUnfreeze(totalFreezeTime);
+        }
         
         // Remove freeze effect
         if (freezeEffect != null)
@@ -383,12 +453,11 @@ public class RunnerAgent : Agent
             }
         }
         
-        // Check for tagger touch
-        if (other.CompareTag("Tagger") && !isFrozen)
+        // Check for freeze ball projectile hit
+        if (other.CompareTag("FreezeBallProjectile") && !isFrozen)
         {
             Freeze();
         }
-        
     }
     
     private void OnDrawGizmosSelected()
@@ -411,4 +480,31 @@ public class RunnerAgent : Agent
         }
     }
     
+    // Add OnCollisionEnter to handle non-trigger collisions
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Check for wall collisions
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            // Apply any wall collision logic here
+            // e.g., push back, stop movement, etc.
+        }
+        
+        // No need to check for tagger collisions here as that's handled by the tagger
+    }
+    
+    // Add method to report final survival times at end of episode
+    protected override void OnDisable()
+    {
+        // Call the base class implementation first
+        base.OnDisable();
+        
+        // If the agent is still alive and survival timer is active, report the final survival time
+        if (hasSurvivalTimerStarted && !isFrozen && GameManager.Instance != null)
+        {
+            float finalSurvivalTime = Time.time - lastUnfreezeTime;
+            GameManager.Instance.UpdateSurvivalTimeAfterFreeze(finalSurvivalTime);
+            Debug.Log($"Runner survived for {finalSurvivalTime:F2} seconds until end of episode");
+        }
+    }
 } 

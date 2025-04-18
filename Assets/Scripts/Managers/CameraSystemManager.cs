@@ -21,6 +21,7 @@ public class CameraSystemManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            // Don't use DontDestroyOnLoad to allow proper scene reloading
         }
         else
         {
@@ -28,8 +29,21 @@ public class CameraSystemManager : MonoBehaviour
         }
     }
     
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+    
     void Start()
     {
+        // Reset camera system state when starting
+        currentCameraIndex = -1;  // Reset to overview camera
+        isOverviewActive = true;  // Ensure overview is active initially
+        agentCameras.Clear();     // Clear previous agent cameras
+        
         // Start with overview camera active
         if (overviewCamera != null)
         {

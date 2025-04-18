@@ -44,11 +44,19 @@ public class GameManager : MonoBehaviour
         public int totalFreezes;
         public int totalUnfreezes;
         public float episodeLength;
-        public float freezeballCollectionPercent;
-        public float wallballCollectionPercent;
         public int wallsUsed;
         public int freezeballsUsed;
         public int freezeballsHit;
+        public int freezeByTouch;
+        public int frozenAgentsAtEndOfEpisode;
+        public float totalTimeSpentFreezing;
+        public float fastestUnfreeze;
+        public float avgUnfreezeTime;
+        public int totalWallHitsToTagger;
+        public int totalWallHitsToFreezeBallProjectile;
+        public int totalUnsuccessfulUnfreezeAttempts;
+        public float longestSurviveFromUnfreeze;
+        public float shortestSurviveFromUnfreeze;
     }
 
     // Event declarations
@@ -96,13 +104,18 @@ public class GameManager : MonoBehaviour
     // Selected lesson index
     private int currentLessonIndex = 3; // Default to lesson 3 (Lesson1_hard)
 
+    // Variables for tracking unfreeze times
+    private float totalUnfreezeTime = 0f;
+    private int unfreezeCount = 0;
+
     private void Awake()
     {
         // Singleton pattern
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // Remove DontDestroyOnLoad to allow proper scene reloading
+            // DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -113,7 +126,23 @@ public class GameManager : MonoBehaviour
         // Initialize stats
         CurrentStats = new GameStats();
         
-        // Check if Academy exists and set max episodes
+        // Initial load of lesson configuration (will be updated in Start if needed)
+        LoadLessonConfiguration();
+    }
+
+    private void Start()
+    {
+        // Check for PlayerPrefs values that might have changed since the last time
+        // the game scene was loaded (e.g., after returning from main menu)
+        CheckPlayerPrefs();
+        
+        // Start a new episode
+        StartNewEpisode();
+    }
+
+    private void CheckPlayerPrefs()
+    {
+        // First check if Academy exists and update max episodes
         bool academyExists = Unity.MLAgents.Academy.IsInitialized;
         if (academyExists)
         {
@@ -126,8 +155,20 @@ public class GameManager : MonoBehaviour
                 var academyParameters = Academy.Instance.EnvironmentParameters;
                 if (academyParameters.GetWithDefault("lesson", -1) != -1)
                 {
-                    currentLessonIndex = Mathf.FloorToInt(academyParameters.GetWithDefault("lesson", currentLessonIndex));
-                    Debug.Log($"Lesson index from Academy: {currentLessonIndex}");
+                    int newLessonIndex = Mathf.FloorToInt(academyParameters.GetWithDefault("lesson", currentLessonIndex));
+                    
+                    // Only reload lesson if it has changed
+                    if (newLessonIndex != currentLessonIndex)
+                    {
+                        currentLessonIndex = newLessonIndex;
+                        Debug.Log($"Updated lesson index from Academy: {currentLessonIndex}");
+                        
+                        // Reload the lesson configuration with the new index
+                        LoadLessonConfiguration();
+                        
+                        // Academy settings take precedence, so we can return early
+                        return;
+                    }
                 }
             }
             catch (Exception e)
@@ -139,65 +180,68 @@ public class GameManager : MonoBehaviour
         {
             MaxEpisodes = 5;
             Debug.Log("Academy not found, setting max episodes to 5");
+        }
+        
+        // If Academy doesn't exist or doesn't specify a lesson, check PlayerPrefs
+        // Always check for updated lesson type from PlayerPrefs
+        if (PlayerPrefs.HasKey("LessonType"))
+        {
+            int newLessonIndex = PlayerPrefs.GetInt("LessonType", currentLessonIndex);
             
-            // Try to get parameters from PlayerPrefs (set by MainMenu)
-            if (PlayerPrefs.HasKey("LessonType"))
+            // Only reload lesson if it has changed
+            if (newLessonIndex != currentLessonIndex)
             {
-                currentLessonIndex = PlayerPrefs.GetInt("LessonType", currentLessonIndex);
-                Debug.Log($"Lesson index from MainMenu: {currentLessonIndex}");
-            }
-            
-            if (PlayerPrefs.HasKey("RunnerAgentModel"))
-            {
-                string modelName = PlayerPrefs.GetString("RunnerAgentModel", "");
-                if (!string.IsNullOrEmpty(modelName))
-                {
-                    // Load the model from Resources/Models/Runner folder
-                    runnerModel = Resources.Load<ModelAsset>($"Models/Runner/{modelName}");
-                    if (runnerModel != null)
-                    {
-                        Debug.Log($"Loaded Runner Model: {modelName}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Failed to load Runner Model: {modelName}");
-                    }
-                }
-            }
-            
-            if (PlayerPrefs.HasKey("TaggerAgentModel"))
-            {
-                string modelName = PlayerPrefs.GetString("TaggerAgentModel", "");
-                if (!string.IsNullOrEmpty(modelName))
-                {
-                    // Load the model from Resources/Models/Tagger folder
-                    taggerModel = Resources.Load<ModelAsset>($"Models/Tagger/{modelName}");
-                    if (taggerModel != null)
-                    {
-                        Debug.Log($"Loaded Tagger Model: {modelName}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Failed to load Tagger Model: {modelName}");
-                    }
-                }
-            }
-            
-            // Get heuristic mode setting
-            if (PlayerPrefs.HasKey("HeuristicMode"))
-            {
-                heuristicMode = PlayerPrefs.GetInt("HeuristicMode", 0);
-                Debug.Log($"Heuristic Mode: {heuristicMode} (0: None, 1: Runner, 2: Tagger)");
+                currentLessonIndex = newLessonIndex;
+                Debug.Log($"Updated lesson index from PlayerPrefs: {currentLessonIndex}");
+                
+                // Reload the lesson configuration with the new index
+                LoadLessonConfiguration();
             }
         }
         
-        // Load lesson configuration
-        LoadLessonConfiguration();
-    }
-
-    private void Start()
-    {
-        StartNewEpisode();
+        // Check for updated agent models
+        if (PlayerPrefs.HasKey("RunnerAgentModel"))
+        {
+            string modelName = PlayerPrefs.GetString("RunnerAgentModel", "");
+            if (!string.IsNullOrEmpty(modelName))
+            {
+                // Load the model from Resources/Models/Runner folder
+                runnerModel = Resources.Load<ModelAsset>($"Models/Runner/{modelName}");
+                if (runnerModel != null)
+                {
+                    Debug.Log($"Loaded Runner Model: {modelName}");
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to load Runner Model: {modelName}");
+                }
+            }
+        }
+        
+        if (PlayerPrefs.HasKey("TaggerAgentModel"))
+        {
+            string modelName = PlayerPrefs.GetString("TaggerAgentModel", "");
+            if (!string.IsNullOrEmpty(modelName))
+            {
+                // Load the model from Resources/Models/Tagger folder
+                taggerModel = Resources.Load<ModelAsset>($"Models/Tagger/{modelName}");
+                if (taggerModel != null)
+                {
+                    Debug.Log($"Loaded Tagger Model: {modelName}");
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to load Tagger Model: {modelName}");
+                }
+            }
+        }
+        
+        // Get heuristic mode setting
+        if (PlayerPrefs.HasKey("HeuristicMode"))
+        {
+            heuristicMode = PlayerPrefs.GetInt("HeuristicMode", 0);
+            Debug.Log($"Heuristic Mode: {heuristicMode} (0: None, 1: Runner, 2: Tagger)");
+        }
     }
 
     private void Update()
@@ -311,11 +355,23 @@ public class GameManager : MonoBehaviour
         CurrentStats.totalFreezes = 0;
         CurrentStats.totalUnfreezes = 0;
         CurrentStats.episodeLength = 0;
-        CurrentStats.freezeballCollectionPercent = 0;
-        CurrentStats.wallballCollectionPercent = 0;
         CurrentStats.wallsUsed = 0;
         CurrentStats.freezeballsUsed = 0;
         CurrentStats.freezeballsHit = 0;
+        CurrentStats.freezeByTouch = 0;
+        CurrentStats.frozenAgentsAtEndOfEpisode = 0;
+        CurrentStats.totalTimeSpentFreezing = 0f;
+        CurrentStats.fastestUnfreeze = float.MaxValue; // Initialize to max value so any unfreeze will be faster
+        CurrentStats.avgUnfreezeTime = 0f;
+        CurrentStats.totalWallHitsToTagger = 0;
+        CurrentStats.totalWallHitsToFreezeBallProjectile = 0;
+        CurrentStats.totalUnsuccessfulUnfreezeAttempts = 0;
+        CurrentStats.longestSurviveFromUnfreeze = 0f;
+        CurrentStats.shortestSurviveFromUnfreeze = float.MaxValue;
+        
+        // Reset unfreeze tracking variables
+        totalUnfreezeTime = 0f;
+        unfreezeCount = 0;
         
         // Note: We don't reset runnersWin and taggersWin as those are cumulative
     }
@@ -542,6 +598,48 @@ public class GameManager : MonoBehaviour
             CurrentStats.taggersWin++;
         }
         
+        // Count frozen agents at the end of the episode
+        int frozenCount = 0;
+        foreach (var runner in runners)
+        {
+            if (runner != null)
+            {
+                RunnerAgent runnerAgent = runner.GetComponent<RunnerAgent>();
+                if (runnerAgent != null)
+                {
+                    // Check if the runner is frozen
+                    if (runnerAgent.IsFrozen)
+                    {
+                        frozenCount++;
+                    }
+                    else
+                    {
+                        // This is a surviving runner - trigger its OnDisable to report final survival time
+                        // (we'll do this by temporarily disabling it and then re-enabling it)
+                        bool wasActive = runner.activeSelf;
+                        if (wasActive)
+                        {
+                            runner.SetActive(false);
+                            runner.SetActive(true);
+                        }
+                    }
+                }
+            }
+        }
+        CurrentStats.frozenAgentsAtEndOfEpisode = frozenCount;
+        
+        // Ensure average unfreeze time is 0 if no unfreezes occurred
+        if (unfreezeCount == 0)
+        {
+            CurrentStats.avgUnfreezeTime = 0f;
+        }
+        
+        // Handle the case where shortest survival time was never set (no agent was frozen and unfrozen)
+        if (CurrentStats.shortestSurviveFromUnfreeze == float.MaxValue)
+        {
+            CurrentStats.shortestSurviveFromUnfreeze = 0f;
+        }
+        
         // Save a copy of the current episode's stats before starting the next episode
         GameStats episodeStat = new GameStats
         {
@@ -553,11 +651,19 @@ public class GameManager : MonoBehaviour
             totalFreezes = CurrentStats.totalFreezes,
             totalUnfreezes = CurrentStats.totalUnfreezes,
             episodeLength = CurrentStats.episodeLength,
-            freezeballCollectionPercent = CurrentStats.freezeballCollectionPercent,
-            wallballCollectionPercent = CurrentStats.wallballCollectionPercent,
             wallsUsed = CurrentStats.wallsUsed,
             freezeballsUsed = CurrentStats.freezeballsUsed,
-            freezeballsHit = CurrentStats.freezeballsHit
+            freezeballsHit = CurrentStats.freezeballsHit,
+            freezeByTouch = CurrentStats.freezeByTouch,
+            frozenAgentsAtEndOfEpisode = CurrentStats.frozenAgentsAtEndOfEpisode,
+            totalTimeSpentFreezing = CurrentStats.totalTimeSpentFreezing,
+            fastestUnfreeze = CurrentStats.fastestUnfreeze == float.MaxValue ? 0f : CurrentStats.fastestUnfreeze,
+            avgUnfreezeTime = CurrentStats.avgUnfreezeTime,
+            totalWallHitsToTagger = CurrentStats.totalWallHitsToTagger,
+            totalWallHitsToFreezeBallProjectile = CurrentStats.totalWallHitsToFreezeBallProjectile,
+            totalUnsuccessfulUnfreezeAttempts = CurrentStats.totalUnsuccessfulUnfreezeAttempts,
+            longestSurviveFromUnfreeze = CurrentStats.longestSurviveFromUnfreeze,
+            shortestSurviveFromUnfreeze = CurrentStats.shortestSurviveFromUnfreeze
         };
         
         // Add to our episode stats list
@@ -607,13 +713,11 @@ public class GameManager : MonoBehaviour
     public void NotifyFreezeBallCollected()
     {
         CurrentStats.freezeballsCollected++;
-        CurrentStats.freezeballCollectionPercent = (float)CurrentStats.freezeballsCollected / CurrentLesson.num_freezeballs;
     }
 
     public void NotifyWallBallCollected()
     {
         CurrentStats.wallballsCollected++;
-        CurrentStats.wallballCollectionPercent = (float)CurrentStats.wallballsCollected / CurrentLesson.num_wallballs;
     }
 
     public void NotifyWallUsed()
@@ -631,23 +735,71 @@ public class GameManager : MonoBehaviour
         CurrentStats.freezeballsHit++;
     }
 
+    public void NotifyFreezeByTouch()
+    {
+        CurrentStats.freezeByTouch++;
+    }
+
+    public void AddFreezeTime(float freezeTime)
+    {
+        CurrentStats.totalTimeSpentFreezing += freezeTime;
+    }
+
+    public void CheckFastestUnfreeze(float unfreezeTime)
+    {
+        // Only track valid unfreeze times (greater than zero)
+        if (unfreezeTime > 0)
+        {
+            // Update fastest unfreeze time if this one was faster
+            if (unfreezeTime < CurrentStats.fastestUnfreeze)
+            {
+                CurrentStats.fastestUnfreeze = unfreezeTime;
+            }
+            
+            // Add to total unfreeze time for average calculation
+            totalUnfreezeTime += unfreezeTime;
+            unfreezeCount++;
+            
+            // Calculate average unfreeze time
+            if (unfreezeCount > 0)
+            {
+                CurrentStats.avgUnfreezeTime = totalUnfreezeTime / unfreezeCount;
+            }
+        }
+    }
+
+    public void NotifyWallHitByTagger()
+    {
+        CurrentStats.totalWallHitsToTagger++;
+    }
+
+    public void NotifyWallHitByFreezeBallProjectile()
+    {
+        CurrentStats.totalWallHitsToFreezeBallProjectile++;
+    }
+
+    public void NotifyUnsuccessfulUnfreezeAttempt()
+    {
+        CurrentStats.totalUnsuccessfulUnfreezeAttempts++;
+    }
+
     private void ExportResultsToCSV()
     {
         StringBuilder sb = new StringBuilder();
         
         // Add headers
-        sb.AppendLine("Episode,RunnerWin,TaggerWin,Time,FreezeBallsCollected,WallBallsCollected,TotalFreezes,TotalUnfreezes,EpisodeLength,FreezeBallCollectionPercent,WallBallCollectionPercent,WallsUsed,FreezeBallsUsed,FreezeBallsHit");
+        sb.AppendLine("Episode,RunnerWin,TaggerWin,Time,FreezeBallsCollected,WallBallsCollected,TotalFreezes,TotalUnfreezes,EpisodeLength,WallsUsed,FreezeBallsUsed,FreezeBallsHit,FreezeByTouch,FrozenAgentsAtEndOfEpisode,TotalTimeSpentFreezing,FastestUnfreeze,AvgUnfreezeTime,TotalWallHitsToTagger,TotalWallHitsToFreezeBallProjectile,TotalUnsuccessfulUnfreezeAttempts,LongestSurviveFromUnfreeze,ShortestSurviveFromUnfreeze");
         
         // Add data for each episode
         for (int i = 0; i < episodeStats.Count; i++)
         {
             GameStats stats = episodeStats[i];
-            sb.AppendLine($"{i+1},{stats.runnersWin},{stats.taggersWin},{stats.time},{stats.freezeballsCollected},{stats.wallballsCollected},{stats.totalFreezes},{stats.totalUnfreezes},{stats.episodeLength},{stats.freezeballCollectionPercent},{stats.wallballCollectionPercent},{stats.wallsUsed},{stats.freezeballsUsed},{stats.freezeballsHit}");
+            sb.AppendLine($"{i+1},{stats.runnersWin},{stats.taggersWin},{stats.time},{stats.freezeballsCollected},{stats.wallballsCollected},{stats.totalFreezes},{stats.totalUnfreezes},{stats.episodeLength},{stats.wallsUsed},{stats.freezeballsUsed},{stats.freezeballsHit},{stats.freezeByTouch},{stats.frozenAgentsAtEndOfEpisode},{stats.totalTimeSpentFreezing},{stats.fastestUnfreeze},{stats.avgUnfreezeTime},{stats.totalWallHitsToTagger},{stats.totalWallHitsToFreezeBallProjectile},{stats.totalUnsuccessfulUnfreezeAttempts},{stats.longestSurviveFromUnfreeze},{stats.shortestSurviveFromUnfreeze}");
         }
         
         // Add summary row
         sb.AppendLine("------- Summary -------");
-        sb.AppendLine($"Total,{CurrentStats.runnersWin},{CurrentStats.taggersWin},{CurrentStats.time},{CurrentStats.freezeballsCollected},{CurrentStats.wallballsCollected},{CurrentStats.totalFreezes},{CurrentStats.totalUnfreezes},{CurrentStats.episodeLength},{CurrentStats.freezeballCollectionPercent},{CurrentStats.wallballCollectionPercent},{CurrentStats.wallsUsed},{CurrentStats.freezeballsUsed},{CurrentStats.freezeballsHit}");
+        sb.AppendLine($"Total,{CurrentStats.runnersWin},{CurrentStats.taggersWin},{CurrentStats.time},{CurrentStats.freezeballsCollected},{CurrentStats.wallballsCollected},{CurrentStats.totalFreezes},{CurrentStats.totalUnfreezes},{CurrentStats.episodeLength},{CurrentStats.wallsUsed},{CurrentStats.freezeballsUsed},{CurrentStats.freezeballsHit},{CurrentStats.freezeByTouch},{CurrentStats.frozenAgentsAtEndOfEpisode},{CurrentStats.totalTimeSpentFreezing},{CurrentStats.fastestUnfreeze},{CurrentStats.avgUnfreezeTime},{CurrentStats.totalWallHitsToTagger},{CurrentStats.totalWallHitsToFreezeBallProjectile},{CurrentStats.totalUnsuccessfulUnfreezeAttempts},{CurrentStats.longestSurviveFromUnfreeze},{CurrentStats.shortestSurviveFromUnfreeze}");
         
         // Define file path with timestamp
         string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -674,7 +826,35 @@ public class GameManager : MonoBehaviour
         // Optionally export results before leaving
         ExportResultsToCSV();
         
+        // Clean up the singleton instance
+        Instance = null;
+        
         // Load main menu scene
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    }
+
+    public void UpdateSurvivalTimeAfterFreeze(float survivalTime)
+    {
+        // Update longest survival time if this one is longer
+        if (survivalTime > CurrentStats.longestSurviveFromUnfreeze)
+        {
+            CurrentStats.longestSurviveFromUnfreeze = survivalTime;
+        }
+        
+        // Update shortest survival time if this one is shorter
+        // and is a valid time (greater than zero)
+        if (survivalTime > 0 && survivalTime < CurrentStats.shortestSurviveFromUnfreeze)
+        {
+            CurrentStats.shortestSurviveFromUnfreeze = survivalTime;
+        }
+    }
+    
+    // Make sure to clean up the singleton reference when the GameManager is destroyed
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 } 

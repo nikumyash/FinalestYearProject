@@ -2323,7 +2323,7 @@ MonoBehaviour:
   taggersWinText: {fileID: 590499025}
   timerText: {fileID: 1587587712}
   episodeText: {fileID: 93689833}
-  lessonNameText: {fileID: 0}
+  lessonNameText: {fileID: 1594989029}
   returnToMenuButton: {fileID: 1304390295}
 --- !u!4 &1883094307
 Transform:

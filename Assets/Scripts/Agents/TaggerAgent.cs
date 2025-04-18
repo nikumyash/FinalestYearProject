@@ -33,6 +33,8 @@ public class TaggerAgent : Agent
     {
         base.Awake();
         
+        // Ensure this agent has the "Tagger" tag
+        
         if (agentMovement == null)
         {
             agentMovement = GetComponent<AgentMovement>();
@@ -240,6 +242,37 @@ public class TaggerAgent : Agent
         OnFreezeBallShot?.Invoke();
     }
     
+    // Add OnCollisionEnter to handle non-trigger collisions
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Check for runner contact - if tagger has freezeballs, freeze the runner directly
+        if (collision.gameObject.CompareTag("Runner") && currentFreezeBalls > 0)
+        {
+            RunnerAgent runner = collision.gameObject.GetComponent<RunnerAgent>();
+            if (runner != null && !runner.IsFrozen)
+            {
+                // Use a freezeball
+                currentFreezeBalls--;
+                
+                // Freeze the runner
+                runner.Freeze();
+                
+                // Notify about freezeball use
+                OnFreezeBallShot?.Invoke();
+                
+                // Notify game manager about freezing by touch
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.NotifyFreezeByTouch();
+                }
+                
+                // Log the direct freeze
+                Debug.Log($"Tagger directly froze runner using a freezeball. Remaining: {currentFreezeBalls}");
+            }
+        }
+    }
+    
+    // Keep the existing OnTriggerEnter for trigger-based collisions
     private void OnTriggerEnter(Collider other)
     {
         // Check for collectable items
@@ -255,5 +288,31 @@ public class TaggerAgent : Agent
                 GameManager.Instance.RespawnFreezeball();
             }
         }
+        
+        // Check for runner contact - if tagger has freezeballs, freeze the runner directly
+        if (other.CompareTag("Runner") && currentFreezeBalls > 0)
+        {
+            RunnerAgent runner = other.GetComponent<RunnerAgent>();
+            if (runner != null && !runner.IsFrozen)
+            {
+                // Use a freezeball
+                currentFreezeBalls--;
+                
+                // Freeze the runner
+                runner.Freeze();
+                
+                // Notify about freezeball use
+                OnFreezeBallShot?.Invoke();
+                
+                // Notify game manager about freezing by touch
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.NotifyFreezeByTouch();
+                }
+                
+                // Log the direct freeze
+                Debug.Log($"Tagger directly froze runner using a freezeball. Remaining: {currentFreezeBalls}");
+            }
+        }
     }
-} 
+}

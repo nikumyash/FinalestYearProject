@@ -3457,7 +3457,7 @@ MonoBehaviour:
   lessonDropdown: {fileID: 30190286}
   runnerModelInput: {fileID: 788420912}
   taggerModelInput: {fileID: 1861198628}
-  heuristicModeDropdown: {fileID: 0}
+  heuristicModeDropdown: {fileID: 1544659950}
   playButton: {fileID: 638900532}
 --- !u!4 &1372512608
 Transform:

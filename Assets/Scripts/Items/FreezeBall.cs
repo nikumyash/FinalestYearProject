@@ -56,7 +56,7 @@ public class FreezeBall : MonoBehaviour
                 // Freeze the runner
                 runner.Freeze();
                 
-                // Notify game manager about freeze ball hit
+                // Notify game manager about freeze ball hit as projectile
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.NotifyFreezeBallHit();
