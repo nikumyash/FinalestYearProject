@@ -447,6 +447,13 @@ public class GameManager : MonoBehaviour
                 }
             }
             
+            // Add item counter to agent camera
+            Transform cameraTransform = runner.transform.Find("AgentCamera");
+            if (cameraTransform != null)
+            {
+                cameraTransform.gameObject.AddComponent<AgentItemCounter>();
+            }
+            
             runners.Add(runner);
             
             // After creating a runner
@@ -498,6 +505,13 @@ public class GameManager : MonoBehaviour
                     tagger.name = "Tagger_Heuristic";
                     Debug.Log("Tagger set to heuristic mode");
                 }
+            }
+            
+            // Add item counter to agent camera
+            Transform cameraTransform = tagger.transform.Find("AgentCamera");
+            if (cameraTransform != null)
+            {
+                cameraTransform.gameObject.AddComponent<AgentItemCounter>();
             }
             
             taggers.Add(tagger);

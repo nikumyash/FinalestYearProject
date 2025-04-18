@@ -177,4 +177,21 @@ public class CameraSystemManager : MonoBehaviour
             agentCameras.Add(camera);
         }
     }
+    
+    // Method to get the currently active camera
+    public CinemachineVirtualCamera GetActiveCamera()
+    {
+        if (isOverviewActive)
+        {
+            return overviewCamera;
+        }
+        else if (currentCameraIndex >= 0 && currentCameraIndex < agentCameras.Count)
+        {
+            // Return the virtual camera component from the active agent camera
+            Transform cameraTransform = agentCameras[currentCameraIndex].transform;
+            return cameraTransform.GetComponent<CinemachineVirtualCamera>();
+        }
+        
+        return null;
+    }
 }

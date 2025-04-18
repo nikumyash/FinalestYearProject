@@ -507,4 +507,10 @@ public class RunnerAgent : Agent
             Debug.Log($"Runner survived for {finalSurvivalTime:F2} seconds until end of episode");
         }
     }
+    
+    // Add method to get current wall balls for UI
+    public int GetCurrentWallBalls()
+    {
+        return currentWallBalls;
+    }
 } 

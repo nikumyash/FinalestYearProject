@@ -315,4 +315,10 @@ public class TaggerAgent : Agent
             }
         }
     }
+    
+    // Add method to get current freeze balls for UI
+    public int GetCurrentFreezeBalls()
+    {
+        return currentFreezeBalls;
+    }
 }
