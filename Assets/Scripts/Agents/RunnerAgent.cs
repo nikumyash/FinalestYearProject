@@ -271,12 +271,18 @@ public class RunnerAgent : Agent
             // Check for nearby unfreezing runners
             CheckForUnfreeze();
         }
+        else
+        {
+            // Survival reward (per timestep) - REDUCED FROM 0.005 to 0.001
+            AddReward(0.001f);
+        }
     }
     
     private void CheckForUnfreeze()
     {
         // Check if there's a non-frozen runner in range
         bool runnerInRange = false;
+        RunnerAgent unfreezeHelper = null;
         
         Collider[] colliders = Physics.OverlapSphere(transform.position, freezeRange);
         foreach (var collider in colliders)
@@ -285,16 +291,25 @@ public class RunnerAgent : Agent
             if (runner != null && runner != this && !runner.IsFrozen)
             {
                 runnerInRange = true;
+                unfreezeHelper = runner;
                 break;
             }
         }
         
-        if (runnerInRange)
+        if (runnerInRange && unfreezeHelper != null)
         {
+            // While unfreezing teammate reward (per timestep) - REDUCED FROM 0.02 to 0.005
+            unfreezeHelper.AddReward(0.005f);
+            Debug.Log($"Rewarding runner for unfreezing teammate (in progress): +0.005");
+            
             unfreezeCounter += Time.fixedDeltaTime;
             if (unfreezeCounter >= unfreezeTime)
             {
                 Unfreeze();
+                
+                // Successfully unfreezing teammate reward
+                unfreezeHelper.AddReward(1.5f);
+                Debug.Log($"Rewarding runner for successfully unfreezing teammate: +1.5");
             }
         }
         else
@@ -335,8 +350,20 @@ public class RunnerAgent : Agent
         if (wallSpawnPoint != null && wallPrefab != null)
         {
             GameObject wall = Instantiate(wallPrefab, wallSpawnPoint.position, wallSpawnPoint.rotation);
+            
+            // Set this runner as the creator of the wall
+            Wall wallComponent = wall.GetComponent<Wall>();
+            if (wallComponent != null)
+            {
+                wallComponent.SetCreator(this);
+            }
+            
             // No need to manually Destroy the wall, it will handle its own lifetime based on lesson settings
         }
+        
+        // Add reward for creating wall - REDUCED FROM 0.3 to 0.1
+        AddReward(0.1f);
+        Debug.Log("Rewarding runner for creating wall: +0.1");
         
         OnWallUsed?.Invoke();
     }
@@ -397,6 +424,10 @@ public class RunnerAgent : Agent
             agentRenderer.material = frozenMaterial;
         }
         
+        // Negative reward for getting frozen
+        AddReward(-1.0f);
+        Debug.Log("Penalizing runner for getting frozen: -1.0");
+        
         OnFreeze?.Invoke();
     }
     
@@ -452,6 +483,11 @@ public class RunnerAgent : Agent
         {
             currentWallBalls++;
             Destroy(other.gameObject);
+            
+            // Reward for collecting wall ball removed
+            // Keeping logging for tracking purposes
+            Debug.Log("Wall ball collected - no immediate reward");
+            
             OnWallBallCollected?.Invoke();
             
             // Notify game manager to respawn a new wall ball

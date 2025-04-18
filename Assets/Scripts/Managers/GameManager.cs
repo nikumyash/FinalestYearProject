@@ -628,10 +628,70 @@ public class GameManager : MonoBehaviour
         if (runnersWin)
         {
             CurrentStats.runnersWin++;
+            
+            // Give victory reward to all runners
+            foreach (var runner in runners)
+            {
+                if (runner != null)
+                {
+                    RunnerAgent runnerAgent = runner.GetComponent<RunnerAgent>();
+                    if (runnerAgent != null)
+                    {
+                        // Team victory reward
+                        runnerAgent.AddReward(3.0f);
+                        Debug.Log("Rewarding runner for team victory: +3.0");
+                    }
+                }
+            }
+            
+            // Give loss penalty to all taggers
+            foreach (var tagger in taggers)
+            {
+                if (tagger != null)
+                {
+                    TaggerAgent taggerAgent = tagger.GetComponent<TaggerAgent>();
+                    if (taggerAgent != null)
+                    {
+                        // Team loss penalty
+                        taggerAgent.AddReward(-2.0f);
+                        Debug.Log("Penalizing tagger for team loss: -2.0");
+                    }
+                }
+            }
         }
         else
         {
             CurrentStats.taggersWin++;
+            
+            // Give victory reward to all taggers
+            foreach (var tagger in taggers)
+            {
+                if (tagger != null)
+                {
+                    TaggerAgent taggerAgent = tagger.GetComponent<TaggerAgent>();
+                    if (taggerAgent != null)
+                    {
+                        // Team victory reward
+                        taggerAgent.AddReward(3.0f);
+                        Debug.Log("Rewarding tagger for team victory: +3.0");
+                    }
+                }
+            }
+            
+            // Give loss penalty to all runners
+            foreach (var runner in runners)
+            {
+                if (runner != null)
+                {
+                    RunnerAgent runnerAgent = runner.GetComponent<RunnerAgent>();
+                    if (runnerAgent != null)
+                    {
+                        // Team loss penalty
+                        runnerAgent.AddReward(-2.0f);
+                        Debug.Log("Penalizing runner for team loss: -2.0");
+                    }
+                }
+            }
         }
         
         // Count frozen agents at the end of the episode

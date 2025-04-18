@@ -10,6 +10,7 @@ public class Wall : MonoBehaviour
     private float timer;
     private BoxCollider wallCollider;
     private Rigidbody wallRigidbody;
+    private RunnerAgent creator; // Reference to the runner who created this wall
     
     private void Start()
     {
@@ -33,6 +34,12 @@ public class Wall : MonoBehaviour
         
         // Add a quick test to verify if the collider is working
         StartCoroutine(TestCollider());
+    }
+    
+    // Method to set the creator of this wall
+    public void SetCreator(RunnerAgent runner)
+    {
+        creator = runner;
     }
     
     private IEnumerator TestCollider()
@@ -159,6 +166,14 @@ public class Wall : MonoBehaviour
         // Only log collisions for debugging
         Debug.Log($"Wall collision detected with: {collision.gameObject.name}, Tag: {collision.gameObject.tag}");
         
+        // Reward the wall creator if a tagger hits this wall
+        if (creator != null && collision.gameObject.CompareTag("Tagger"))
+        {
+            // Wall blocking Tagger path reward - INCREASED FROM 0.6 to 1.0
+            creator.AddReward(1.0f);
+            Debug.Log($"Rewarding runner for wall blocking tagger path: +1.0");
+        }
+        
         // No longer handling notifications here as it's done by the colliding objects
     }
     
@@ -167,6 +182,14 @@ public class Wall : MonoBehaviour
     {
         // Only log trigger collisions for debugging
         Debug.Log($"Wall trigger detected with: {other.gameObject.name}, Tag: {other.gameObject.tag}");
+        
+        // Reward the wall creator if a freeze ball projectile hits this wall
+        if (creator != null && other.CompareTag("FreezeBallProjectile"))
+        {
+            // Wall blocking freeze ball reward - INCREASED FROM 0.4 to 0.8
+            creator.AddReward(0.8f);
+            Debug.Log($"Rewarding runner for wall blocking freeze ball: +0.8");
+        }
         
         // No longer handling notifications here as it's done by the colliding objects
     }

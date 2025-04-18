@@ -236,6 +236,8 @@ public class TaggerAgent : Agent
             if (freezeBallComponent != null)
             {
                 freezeBallComponent.SetAsProjectile(true);
+                // Pass a reference to this agent to the freeze ball component
+                freezeBallComponent.SetOwner(this);
             }
             
             Rigidbody rb = freezeBall.GetComponent<Rigidbody>();
@@ -269,6 +271,10 @@ public class TaggerAgent : Agent
                 // Freeze the runner
                 runner.Freeze();
                 
+                // Reward for freezing runner by direct contact
+                AddReward(1.0f);
+                Debug.Log("Rewarding tagger for freezing runner (direct contact): +1.0");
+                
                 // Notify about freezeball use
                 OnFreezeBallShot?.Invoke();
                 
@@ -287,6 +293,8 @@ public class TaggerAgent : Agent
         if (collision.gameObject.CompareTag("Wall"))
         {
             Debug.Log($"TAGGER HIT WALL: {collision.gameObject.name} - This should be counted in metrics!");
+            
+            // Removed penalty for colliding with wall during pursuit
             
             // Directly notify GameManager about tagger hitting wall
             if (GameManager.Instance != null)
@@ -307,6 +315,11 @@ public class TaggerAgent : Agent
         {
             currentFreezeBalls++;
             Destroy(other.gameObject);
+            
+            // Reward for collecting freeze ball
+            AddReward(0.2f);
+            Debug.Log("Rewarding tagger for collecting freeze ball: +0.2");
+            
             OnFreezeBallCollected?.Invoke();
             
             // Notify game manager to respawn a new freeze ball
@@ -328,6 +341,10 @@ public class TaggerAgent : Agent
                 // Freeze the runner
                 runner.Freeze();
                 
+                // Reward for freezing runner by direct contact
+                AddReward(1.0f);
+                Debug.Log("Rewarding tagger for freezing runner (direct contact): +1.0");
+                
                 // Notify about freezeball use
                 OnFreezeBallShot?.Invoke();
                 
@@ -347,6 +364,8 @@ public class TaggerAgent : Agent
         {
             Debug.Log($"TAGGER TRIGGER HIT WALL: {other.gameObject.name} - This should be counted in metrics!");
             
+            // Removed penalty for colliding with wall during pursuit
+            
             // Directly notify GameManager about tagger hitting wall
             if (GameManager.Instance != null)
             {
@@ -354,6 +373,28 @@ public class TaggerAgent : Agent
                 Debug.Log("DIRECT NotifyWallHitByTagger called from TaggerAgent (trigger)");
             }
         }
+    }
+    
+    // Method to be called when this tagger's freeze ball hits a runner
+    public void RewardFreezeBallHit()
+    {
+        // Premium reward for skill-based freezing with a freeze ball
+        AddReward(1.5f);
+        Debug.Log("Rewarding tagger for freezing runner with freeze ball: +1.5");
+    }
+    
+    // Method to be called when this tagger's freeze ball misses
+    public void PenalizeMissedFreezeBall()
+    {
+        // Removed penalty for missing with freeze ball
+        Debug.Log("Freeze ball missed but no penalty applied");
+    }
+    
+    // Method to be called when this tagger's freeze ball hits a wall
+    public void PenalizeFreezeBallHitWall()
+    {
+        // Removed penalty for hitting wall with freeze ball
+        Debug.Log("Freeze ball hit wall but no penalty applied");
     }
     
     // Add method to get current freeze balls for UI

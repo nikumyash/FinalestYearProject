@@ -10,6 +10,8 @@ public class FreezeBall : MonoBehaviour
     
     private bool isCollected = false;
     private bool hasHit = false;
+    // Reference to the tagger who shot this freeze ball
+    private TaggerAgent owner;
     
     public void SetAsProjectile(bool isProj)
     {
@@ -24,6 +26,12 @@ public class FreezeBall : MonoBehaviour
         {
             gameObject.tag = "FreezeBall";
         }
+    }
+    
+    // Set the owner of this freeze ball
+    public void SetOwner(TaggerAgent taggerAgent)
+    {
+        owner = taggerAgent;
     }
     
     private void OnTriggerEnter(Collider other)
@@ -56,6 +64,12 @@ public class FreezeBall : MonoBehaviour
                 // Freeze the runner
                 runner.Freeze();
                 
+                // Reward the tagger who shot this freeze ball
+                if (owner != null)
+                {
+                    owner.RewardFreezeBallHit();
+                }
+                
                 // Notify game manager about freeze ball hit as projectile
                 if (GameManager.Instance != null)
                 {
@@ -71,6 +85,12 @@ public class FreezeBall : MonoBehaviour
                 hasHit = true;
                 PlayHitEffect();
                 
+                // Still notify the tagger that their freeze ball hit a wall, but no penalty is applied
+                if (owner != null)
+                {
+                    owner.PenalizeFreezeBallHitWall();
+                }
+                
                 // Directly notify GameManager about freeze ball hitting wall
                 if (GameManager.Instance != null)
                 {
@@ -84,6 +104,13 @@ public class FreezeBall : MonoBehaviour
             {
                 hasHit = true;
                 PlayHitEffect();
+                
+                // Still notify the tagger that their freeze ball missed, but no penalty is applied
+                if (owner != null)
+                {
+                    owner.PenalizeMissedFreezeBall();
+                }
+                
                 Destroy(gameObject);
             }
         }
@@ -96,6 +123,12 @@ public class FreezeBall : MonoBehaviour
         {
             hasHit = true;
             PlayHitEffect();
+            
+            // Still notify the tagger that their freeze ball hit a wall, but no penalty is applied
+            if (owner != null)
+            {
+                owner.PenalizeFreezeBallHitWall();
+            }
             
             // Directly notify GameManager about freeze ball hitting wall
             if (GameManager.Instance != null)

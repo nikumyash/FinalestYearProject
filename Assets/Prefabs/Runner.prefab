@@ -230,6 +230,7 @@ GameObject:
   - component: {fileID: 5619331554734273640}
   - component: {fileID: 6402482100500080761}
   - component: {fileID: 7165666590802710782}
+  - component: {fileID: 2393645940507559965}
   - component: {fileID: 1571381281376624076}
   m_Layer: 0
   m_Name: Runner
@@ -430,6 +431,40 @@ MonoBehaviour:
   agentRenderer: {fileID: 2538139005652365486}
   normalMaterial: {fileID: 2100000, guid: 2fd059f4c6434d741beb28271c1ad65c, type: 2}
   frozenMaterial: {fileID: 2100000, guid: 300e2384398ffb349a49b0b90febb555, type: 2}
+--- !u!114 &2393645940507559965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7294958965904808911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb6b867a41448888c1cd4f99643ad71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SensorName: RayPerceptionSensor
+  m_DetectableTags:
+  - Tagger
+  - Runner
+  - Wall
+  - WallBall
+  - FreezeBall
+  - FreezeBallProjectile
+  m_RaysPerDirection: 6
+  m_MaxRayDegrees: 70
+  m_SphereCastRadius: 1
+  m_RayLength: 20
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  m_ObservationStacks: 1
+  m_AlternatingRayOrder: 1
+  m_UseBatchedRaycasts: 0
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
+  m_StartVerticalOffset: 0
+  m_EndVerticalOffset: 0
 --- !u!114 &1571381281376624076
 MonoBehaviour:
   m_ObjectHideFlags: 0
