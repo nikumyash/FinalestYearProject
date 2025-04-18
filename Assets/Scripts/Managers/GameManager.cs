@@ -23,6 +23,12 @@ public class GameManager : MonoBehaviour
         public float num_taggers;
         public float num_freezeballs;
         public float time_limit;
+        public int max_wallballs;
+        public int max_freezeballs;
+        public float wall_cooldown;
+        public float shoot_cooldown;
+        public float freezeball_speed;
+        public float wall_lifetime;
     }
 
     [System.Serializable]
@@ -307,18 +313,24 @@ public class GameManager : MonoBehaviour
 
     private void SetDefaultLesson()
     {
-        // Create default lesson (Lesson1_hard)
+        // Create default lesson (Default)
         CurrentLesson = new Lesson
         {
-            name = "Lesson1_hard",
+            name = "Default",
             num_wallballs = 10.0f,
             num_runners = 5.0f,
             num_taggers = 4.0f,
             num_freezeballs = 10.0f,
-            time_limit = 90.0f
+            time_limit = 90.0f,
+            max_wallballs = 3,
+            max_freezeballs = 3,
+            wall_cooldown = 1f,
+            shoot_cooldown = 1f,
+            freezeball_speed = 4.0f,
+            wall_lifetime = 3.0f
         };
         
-        Debug.Log("Using default lesson (Lesson1_hard)");
+        Debug.Log("Using default lesson (Default)");
     }
 
     public void StartNewEpisode()

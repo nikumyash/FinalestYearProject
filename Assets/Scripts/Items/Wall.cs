@@ -13,6 +13,13 @@ public class Wall : MonoBehaviour
     
     private void Start()
     {
+        // Get wall lifetime from current lesson if available
+        if (GameManager.Instance != null && GameManager.Instance.CurrentLesson != null)
+        {
+            lifetime = GameManager.Instance.CurrentLesson.wall_lifetime;
+            Debug.Log($"Wall using lesson parameter: lifetime={lifetime}s");
+        }
+        
         timer = lifetime;
         
         // Ensure wall is properly set up for solid collisions

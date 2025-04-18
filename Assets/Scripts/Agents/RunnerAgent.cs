@@ -86,6 +86,14 @@ public class RunnerAgent : Agent
             OnUnfreeze += GameManager.Instance.NotifyUnfreeze;
             OnWallBallCollected += GameManager.Instance.NotifyWallBallCollected;
             OnWallUsed += GameManager.Instance.NotifyWallUsed;
+            
+            // Update parameters from current lesson
+            if (GameManager.Instance.CurrentLesson != null)
+            {
+                maxWallBalls = GameManager.Instance.CurrentLesson.max_wallballs;
+                wallCooldown = GameManager.Instance.CurrentLesson.wall_cooldown;
+                Debug.Log($"Runner using lesson parameters: maxWallBalls={maxWallBalls}, wallCooldown={wallCooldown}");
+            }
         }
     }
     
@@ -327,7 +335,7 @@ public class RunnerAgent : Agent
         if (wallSpawnPoint != null && wallPrefab != null)
         {
             GameObject wall = Instantiate(wallPrefab, wallSpawnPoint.position, wallSpawnPoint.rotation);
-            Destroy(wall, 3f); // Wall lasts 3 seconds
+            // No need to manually Destroy the wall, it will handle its own lifetime based on lesson settings
         }
         
         OnWallUsed?.Invoke();

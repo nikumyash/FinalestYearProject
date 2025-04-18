@@ -34,6 +34,7 @@ public class TaggerAgent : Agent
         base.Awake();
         
         // Ensure this agent has the "Tagger" tag
+        gameObject.tag = "Tagger";
         
         if (agentMovement == null)
         {
@@ -52,6 +53,15 @@ public class TaggerAgent : Agent
         {
             OnFreezeBallCollected += GameManager.Instance.NotifyFreezeBallCollected;
             OnFreezeBallShot += GameManager.Instance.NotifyFreezeBallUsed;
+            
+            // Update parameters from current lesson
+            if (GameManager.Instance.CurrentLesson != null)
+            {
+                maxFreezeBalls = GameManager.Instance.CurrentLesson.max_freezeballs;
+                shootCooldown = GameManager.Instance.CurrentLesson.shoot_cooldown;
+                freezeBallSpeed = GameManager.Instance.CurrentLesson.freezeball_speed;
+                Debug.Log($"Tagger using lesson parameters: maxFreezeBalls={maxFreezeBalls}, shootCooldown={shootCooldown}, freezeBallSpeed={freezeBallSpeed}");
+            }
         }
     }
     
