@@ -94,41 +94,81 @@ public class UIItemDisplay : MonoBehaviour
     
     private void UpdateDisplayedAgent()
     {
-        // Get active Cinemachine camera
-        CinemachineVirtualCamera currentCam = GetActiveVirtualCamera();
-        
-        if (currentCam != activeCam)
+        try
         {
-            activeCam = currentCam;
-            currentDisplayedAgent = FindAgentForCamera(activeCam);
+            // Get active Cinemachine camera
+            CinemachineVirtualCamera currentCam = GetActiveVirtualCamera();
             
-            // Show/Hide UI based on if we found an agent
-            if (itemCountText != null)
+            if (currentCam != activeCam)
             {
-                if (currentDisplayedAgent != null)
+                activeCam = currentCam;
+                currentDisplayedAgent = FindAgentForCamera(activeCam);
+                
+                // Show/Hide UI based on if we found an agent
+                if (itemCountText != null)
                 {
-                    itemCountText.gameObject.SetActive(true);
-                    UpdateItemText();
-                }
-                else
-                {
-                    itemCountText.gameObject.SetActive(false);
+                    if (currentDisplayedAgent != null)
+                    {
+                        itemCountText.gameObject.SetActive(true);
+                        UpdateItemText();
+                    }
+                    else
+                    {
+                        itemCountText.gameObject.SetActive(false);
+                    }
                 }
             }
+            else if (currentDisplayedAgent != null)
+            {
+                // Update the text if an agent is displayed
+                UpdateItemText();
+            }
         }
-        else if (currentDisplayedAgent != null)
+        catch (System.Exception e)
         {
-            // Update the text if an agent is displayed
-            UpdateItemText();
+            // Handle any exceptions gracefully
+            Debug.LogWarning($"Error updating displayed agent: {e.Message}");
+            
+            // Reset state and hide UI
+            activeCam = null;
+            currentDisplayedAgent = null;
+            if (itemCountText != null)
+            {
+                itemCountText.gameObject.SetActive(false);
+            }
         }
     }
     
     private void UpdateItemText()
     {
-        if (currentDisplayedAgent != null && itemCountText != null)
+        if (currentDisplayedAgent == null)
         {
-            itemCountText.text = currentDisplayedAgent.GetItemText();
-            itemCountText.color = currentDisplayedAgent.GetTextColor();
+            // If agent is destroyed, hide the text
+            if (itemCountText != null)
+            {
+                itemCountText.gameObject.SetActive(false);
+            }
+            currentDisplayedAgent = null;
+            return;
+        }
+        
+        // Use try-catch to handle any null reference errors
+        try
+        {
+            if (itemCountText != null)
+            {
+                itemCountText.text = currentDisplayedAgent.GetItemText();
+                itemCountText.color = currentDisplayedAgent.GetTextColor();
+            }
+        }
+        catch (System.Exception)
+        {
+            // If we get an error, the agent reference is likely destroyed
+            if (itemCountText != null)
+            {
+                itemCountText.gameObject.SetActive(false);
+            }
+            currentDisplayedAgent = null;
         }
     }
     
@@ -137,25 +177,31 @@ public class UIItemDisplay : MonoBehaviour
         // Get the active virtual camera from Cinemachine
         CinemachineVirtualCamera activeCam = null;
         
-        // Try to get from CameraSystemManager if it exists
-        if (CameraSystemManager.Instance != null)
+        try
         {
-            activeCam = CameraSystemManager.Instance.GetActiveCamera();
-        }
-        
-        // Fallback in case we can't get it from CameraSystemManager
-        if (activeCam == null)
-        {
-            CinemachineVirtualCamera[] cams = FindObjectsOfType<CinemachineVirtualCamera>();
-            foreach (var cam in cams)
+            // Try to get from CameraSystemManager if it exists
+            if (CameraSystemManager.Instance != null)
             {
-                // Priority above 50 usually means it's active
-                if (cam.Priority >= 50)
+                activeCam = CameraSystemManager.Instance.GetActiveCamera();
+            }
+            
+            // Fallback in case we can't get it from CameraSystemManager
+            if (activeCam == null)
+            {
+                CinemachineVirtualCamera[] cams = FindObjectsOfType<CinemachineVirtualCamera>();
+                foreach (var cam in cams)
                 {
-                    activeCam = cam;
-                    break;
+                    if (cam != null && cam.isActiveAndEnabled && cam.Priority >= 50)
+                    {
+                        activeCam = cam;
+                        break;
+                    }
                 }
             }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"Error getting active camera: {e.Message}");
         }
         
         return activeCam;
@@ -165,22 +211,37 @@ public class UIItemDisplay : MonoBehaviour
     {
         if (cam == null) return null;
         
-        // If it's the overview camera, return null
-        if (cam.name.Contains("Overview")) return null;
-        
-        // Try to find the agent whose camera is active
-        foreach (var agent in registeredAgents)
+        try
         {
-            if (agent == null) continue;
+            // If it's the overview camera, return null
+            if (cam.name.Contains("Overview")) return null;
             
-            // Check if the agent's camera is the active one
-            Transform agentCamTransform = agent.GetTransform();
-            if (agentCamTransform != null && 
-                agentCamTransform.parent != null && 
-                cam.transform.IsChildOf(agentCamTransform.parent))
+            // Try to find the agent whose camera is active
+            for (int i = registeredAgents.Count - 1; i >= 0; i--)
             {
-                return agent;
+                if (i >= registeredAgents.Count) continue; // Safety check for collection modified
+                
+                AgentItemCounter agent = registeredAgents[i];
+                if (agent == null)
+                {
+                    // Clean up null entries
+                    registeredAgents.RemoveAt(i);
+                    continue;
+                }
+                
+                // Check if the agent's camera is the active one
+                Transform agentCamTransform = agent.GetTransform();
+                if (agentCamTransform != null && 
+                    agentCamTransform.parent != null && 
+                    cam.transform.IsChildOf(agentCamTransform.parent))
+                {
+                    return agent;
+                }
             }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"Error finding agent for camera: {e.Message}");
         }
         
         return null;

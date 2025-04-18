@@ -187,11 +187,74 @@ public class CameraSystemManager : MonoBehaviour
         }
         else if (currentCameraIndex >= 0 && currentCameraIndex < agentCameras.Count)
         {
+            // Add null check to avoid MissingReferenceException when agents are destroyed
+            if (agentCameras[currentCameraIndex] == null)
+            {
+                // If the camera controller is null, switch to overview camera
+                SetOverviewCameraActive();
+                return overviewCamera;
+            }
+            
             // Return the virtual camera component from the active agent camera
             Transform cameraTransform = agentCameras[currentCameraIndex].transform;
-            return cameraTransform.GetComponent<CinemachineVirtualCamera>();
+            if (cameraTransform != null)
+            {
+                return cameraTransform.GetComponent<CinemachineVirtualCamera>();
+            }
+            else
+            {
+                // If the transform is null, switch to overview camera
+                SetOverviewCameraActive();
+                return overviewCamera;
+            }
         }
         
         return null;
+    }
+    
+    // Method to set overview camera active (used at episode transitions)
+    public void SetOverviewCameraActive()
+    {
+        // Only do work if not already on overview camera
+        if (!isOverviewActive)
+        {
+            isOverviewActive = true;
+            
+            // Activate overview camera
+            if (overviewCamera != null)
+            {
+                overviewCamera.Priority = 100;
+            }
+            
+            // Deactivate all agent cameras
+            for (int i = agentCameras.Count - 1; i >= 0; i--)
+            {
+                if (agentCameras[i] != null)
+                {
+                    agentCameras[i].SetCameraActive(false);
+                }
+                else
+                {
+                    // Remove null references from list
+                    agentCameras.RemoveAt(i);
+                }
+            }
+        }
+    }
+    
+    // Method to clean up the list when the game starts a new episode
+    public void CleanupAgentList()
+    {
+        // Remove any null references from the list
+        for (int i = agentCameras.Count - 1; i >= 0; i--)
+        {
+            if (agentCameras[i] == null)
+            {
+                agentCameras.RemoveAt(i);
+            }
+        }
+        
+        // Reset to overview camera
+        SetOverviewCameraActive();
     }
 }

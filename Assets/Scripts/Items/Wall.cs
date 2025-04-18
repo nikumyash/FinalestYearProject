@@ -20,6 +20,24 @@ public class Wall : MonoBehaviour
         
         // Add fade-in animation or effect
         StartCoroutine(FadeIn());
+        
+        // Log that the wall has been created for debugging
+        Debug.Log($"Wall created at {transform.position}. Testing collision system...");
+        
+        // Add a quick test to verify if the collider is working
+        StartCoroutine(TestCollider());
+    }
+    
+    private IEnumerator TestCollider()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Debug.Log($"Wall collider state: isTrigger={wallCollider.isTrigger}, enabled={wallCollider.enabled}, size={wallCollider.size}");
+        
+        // Count the number of colliders on this object
+        BoxCollider[] colliders = GetComponents<BoxCollider>();
+        Debug.Log($"Wall has {colliders.Length} BoxCollider components");
+        
+        // No need to test collisions with a dummy object, just verify the setup is correct
     }
     
     private void SetupPhysics()
@@ -56,6 +74,15 @@ public class Wall : MonoBehaviour
         wallRigidbody.isKinematic = true;
         wallRigidbody.useGravity = false;
         wallRigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        
+        // Get second collider for trigger events
+        BoxCollider[] colliders = GetComponents<BoxCollider>();
+        if (colliders.Length > 1) 
+        {
+            // If a second collider exists, configure it as a trigger
+            colliders[1].isTrigger = true;
+            Debug.Log("Second collider configured as trigger");
+        }
         
         // Ensure wall has correct tag
         gameObject.tag = "Wall";
@@ -122,52 +149,18 @@ public class Wall : MonoBehaviour
     // Handle physical collisions
     private void OnCollisionEnter(Collision collision)
     {
-        // Check for tagger collisions
-        if (collision.gameObject.CompareTag("Tagger"))
-        {
-            // Notify GameManager about tagger hitting a wall
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.NotifyWallHitByTagger();
-            }
-        }
+        // Only log collisions for debugging
+        Debug.Log($"Wall collision detected with: {collision.gameObject.name}, Tag: {collision.gameObject.tag}");
         
-        // Freeze balls are blocked by walls
-        if (collision.gameObject.CompareTag("FreezeBallProjectile"))
-        {
-            // Notify GameManager about freezeball projectile hitting a wall
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.NotifyWallHitByFreezeBallProjectile();
-            }
-            
-            Destroy(collision.gameObject);
-        }
+        // No longer handling notifications here as it's done by the colliding objects
     }
     
     // Handle both trigger and collision interactions
     private void OnTriggerEnter(Collider other)
     {
-        // Check for tagger collisions (in case tagger has trigger collider)
-        if (other.CompareTag("Tagger"))
-        {
-            // Notify GameManager about tagger hitting a wall
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.NotifyWallHitByTagger();
-            }
-        }
+        // Only log trigger collisions for debugging
+        Debug.Log($"Wall trigger detected with: {other.gameObject.name}, Tag: {other.gameObject.tag}");
         
-        // Freeze balls are blocked by walls
-        if (other.CompareTag("FreezeBallProjectile"))
-        {
-            // Notify GameManager about freezeball projectile hitting a wall
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.NotifyWallHitByFreezeBallProjectile();
-            }
-            
-            Destroy(other.gameObject);
-        }
+        // No longer handling notifications here as it's done by the colliding objects
     }
 } 

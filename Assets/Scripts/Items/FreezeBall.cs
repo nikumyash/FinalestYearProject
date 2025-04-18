@@ -66,12 +66,45 @@ public class FreezeBall : MonoBehaviour
                 Destroy(gameObject);
             }
             // Handle collision with walls or other objects
+            else if (other.CompareTag("Wall"))
+            {
+                hasHit = true;
+                PlayHitEffect();
+                
+                // Directly notify GameManager about freeze ball hitting wall
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.NotifyWallHitByFreezeBallProjectile();
+                    Debug.Log("DIRECT NotifyWallHitByFreezeBallProjectile called from FreezeBall");
+                }
+                
+                Destroy(gameObject);
+            }
             else if (!other.CompareTag("Tagger") && !other.CompareTag("FreezeBall") && !other.CompareTag("WallBall"))
             {
                 hasHit = true;
                 PlayHitEffect();
                 Destroy(gameObject);
             }
+        }
+    }
+    
+    // Add physical collision handler for FreezeBall projectiles hitting walls
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (isProjectile && !hasHit && collision.gameObject.CompareTag("Wall"))
+        {
+            hasHit = true;
+            PlayHitEffect();
+            
+            // Directly notify GameManager about freeze ball hitting wall
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.NotifyWallHitByFreezeBallProjectile();
+                Debug.Log("DIRECT NotifyWallHitByFreezeBallProjectile called from FreezeBall (collision)");
+            }
+            
+            Destroy(gameObject);
         }
     }
     

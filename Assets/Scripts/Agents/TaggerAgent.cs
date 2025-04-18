@@ -245,6 +245,8 @@ public class TaggerAgent : Agent
     // Add OnCollisionEnter to handle non-trigger collisions
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log($"Tagger collision with: {collision.gameObject.name}, Tag: {collision.gameObject.tag}, Layer: {LayerMask.LayerToName(collision.gameObject.layer)}");
+        
         // Check for runner contact - if tagger has freezeballs, freeze the runner directly
         if (collision.gameObject.CompareTag("Runner") && currentFreezeBalls > 0)
         {
@@ -270,11 +272,26 @@ public class TaggerAgent : Agent
                 Debug.Log($"Tagger directly froze runner using a freezeball. Remaining: {currentFreezeBalls}");
             }
         }
+        
+        // Add specific check for wall collisions
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            Debug.Log($"TAGGER HIT WALL: {collision.gameObject.name} - This should be counted in metrics!");
+            
+            // Directly notify GameManager about tagger hitting wall
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.NotifyWallHitByTagger();
+                Debug.Log("DIRECT NotifyWallHitByTagger called from TaggerAgent");
+            }
+        }
     }
     
     // Keep the existing OnTriggerEnter for trigger-based collisions
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"Tagger trigger with: {other.gameObject.name}, Tag: {other.gameObject.tag}, Layer: {LayerMask.LayerToName(other.gameObject.layer)}");
+        
         // Check for collectable items
         if (other.CompareTag("FreezeBall") && currentFreezeBalls < maxFreezeBalls)
         {
@@ -312,6 +329,19 @@ public class TaggerAgent : Agent
                 
                 // Log the direct freeze
                 Debug.Log($"Tagger directly froze runner using a freezeball. Remaining: {currentFreezeBalls}");
+            }
+        }
+        
+        // Add specific check for wall collisions through trigger
+        if (other.CompareTag("Wall"))
+        {
+            Debug.Log($"TAGGER TRIGGER HIT WALL: {other.gameObject.name} - This should be counted in metrics!");
+            
+            // Directly notify GameManager about tagger hitting wall
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.NotifyWallHitByTagger();
+                Debug.Log("DIRECT NotifyWallHitByTagger called from TaggerAgent (trigger)");
             }
         }
     }

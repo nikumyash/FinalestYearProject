@@ -132,6 +132,10 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // Verify physics settings
+        Debug.Log($"Physics: bounceThreshold={Physics.bounceThreshold}, defaultContactOffset={Physics.defaultContactOffset}");
+        Debug.Log("Layer collision matrix: checking if any layers are ignoring collisions...");
+        
         // Check for PlayerPrefs values that might have changed since the last time
         // the game scene was loaded (e.g., after returning from main menu)
         CheckPlayerPrefs();
@@ -324,6 +328,12 @@ public class GameManager : MonoBehaviour
             ExportResultsToCSV();
             Debug.Log("Max episodes reached. Experiment complete.");
             return;
+        }
+
+        // Switch to overview camera at the start of a new episode
+        if (CameraSystemManager.Instance != null)
+        {
+            CameraSystemManager.Instance.CleanupAgentList();
         }
 
         CurrentEpisode++;
@@ -785,11 +795,13 @@ public class GameManager : MonoBehaviour
     public void NotifyWallHitByTagger()
     {
         CurrentStats.totalWallHitsToTagger++;
+        Debug.Log($"Wall hit by tagger! Total hits: {CurrentStats.totalWallHitsToTagger}");
     }
 
     public void NotifyWallHitByFreezeBallProjectile()
     {
         CurrentStats.totalWallHitsToFreezeBallProjectile++;
+        Debug.Log($"Wall hit by freeze ball projectile! Total hits: {CurrentStats.totalWallHitsToFreezeBallProjectile}");
     }
 
     public void NotifyUnsuccessfulUnfreezeAttempt()

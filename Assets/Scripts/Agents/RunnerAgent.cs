@@ -483,9 +483,12 @@ public class RunnerAgent : Agent
     // Add OnCollisionEnter to handle non-trigger collisions
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log($"Runner collision with: {collision.gameObject.name}, Tag: {collision.gameObject.tag}, Layer: {LayerMask.LayerToName(collision.gameObject.layer)}");
+        
         // Check for wall collisions
         if (collision.gameObject.CompareTag("Wall"))
         {
+            Debug.Log($"RUNNER HIT WALL: {collision.gameObject.name}");
             // Apply any wall collision logic here
             // e.g., push back, stop movement, etc.
         }
