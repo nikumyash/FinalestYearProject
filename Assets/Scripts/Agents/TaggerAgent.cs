@@ -31,7 +31,11 @@ public class TaggerAgent : Agent
     
     protected override void Awake()
     {
+        // Call base implementation first to ensure communicator is registered early
         base.Awake();
+        
+        // Log registration for debugging
+        Debug.Log("TaggerAgent registered with Unity ML-Agents framework.");
         
         // Ensure this agent has the "Tagger" tag
         gameObject.tag = "Tagger";

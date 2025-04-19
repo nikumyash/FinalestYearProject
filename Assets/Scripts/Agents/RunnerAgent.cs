@@ -56,7 +56,11 @@ public class RunnerAgent : Agent
     
     protected override void Awake()
     {
+        // Call base implementation first to ensure communicator is registered early
         base.Awake();
+        
+        // Log registration for debugging
+        Debug.Log("RunnerAgent registered with Unity ML-Agents framework.");
         
         // Ensure this agent has the "Runner" tag
         gameObject.tag = "Runner";

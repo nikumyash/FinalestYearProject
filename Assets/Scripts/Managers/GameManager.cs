@@ -114,6 +114,9 @@ public class GameManager : MonoBehaviour
     private float totalUnfreezeTime = 0f;
     private int unfreezeCount = 0;
 
+    // File path for the current run's CSV export
+    private string csvFilePath;
+
     private void Awake()
     {
         // Singleton pattern
@@ -132,6 +135,12 @@ public class GameManager : MonoBehaviour
         // Initialize stats
         CurrentStats = new GameStats();
         
+        // Generate a unique filename for this run
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string randomHash = GenerateRandomHash(8);
+        csvFilePath = Path.Combine(Application.persistentDataPath, $"FreezeTagResults_{timestamp}_{randomHash}.csv");
+        Debug.Log($"Results will be saved to: {csvFilePath}");
+        
         // Initial load of lesson configuration (will be updated in Start if needed)
         LoadLessonConfiguration();
     }
@@ -142,11 +151,70 @@ public class GameManager : MonoBehaviour
         Debug.Log($"Physics: bounceThreshold={Physics.bounceThreshold}, defaultContactOffset={Physics.defaultContactOffset}");
         Debug.Log("Layer collision matrix: checking if any layers are ignoring collisions...");
         
-        // Check for PlayerPrefs values that might have changed since the last time
-        // the game scene was loaded (e.g., after returning from main menu)
+        // Initialize lesson configuration with defaults first
+        LoadLessonConfiguration();
+        
+        // Pre-spawn agents to register their communicators with Academy, but don't start the episode yet
+        PreSpawnAgents();
+        
+        // Wait for ML-Agents Academy to initialize before proceeding with game logic
+        StartCoroutine(WaitForAcademyAndContinue());
+    }
+
+    private void PreSpawnAgents()
+    {
+        // Spawn a single runner and tagger outside the play area to register communicators
+        Debug.Log("Pre-spawning agents to register communicators...");
+        
+        // Spawn a runner
+        if (runnerPrefab != null)
+        {
+            // Spawn at a position far below the play area (it will be destroyed later)
+            Vector3 spawnPos = new Vector3(0, -100, 0);
+            GameObject runner = Instantiate(runnerPrefab, spawnPos, Quaternion.identity);
+            runners.Add(runner);
+        }
+        
+        // Spawn a tagger
+        if (taggerPrefab != null)
+        {
+            // Spawn at a position far below the play area (it will be destroyed later)
+            Vector3 spawnPos = new Vector3(0, -100, 0);
+            GameObject tagger = Instantiate(taggerPrefab, spawnPos, Quaternion.identity);
+            taggers.Add(tagger);
+        }
+    }
+
+    private IEnumerator WaitForAcademyAndContinue()
+    {
+        // Wait up to 2 seconds for Academy to initialize
+        float timeoutDuration = 2.0f;
+        float elapsedTime = 0f;
+        
+        Debug.Log("Waiting for ML-Agents Academy to initialize (timeout: 2 seconds)...");
+        
+        while (!Unity.MLAgents.Academy.IsInitialized && elapsedTime < timeoutDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        if (Unity.MLAgents.Academy.IsInitialized)
+        {
+            Debug.Log($"ML-Agents Academy initialized after {elapsedTime:F2} seconds");
+        }
+        else
+        {
+            Debug.LogWarning($"ML-Agents Academy did not initialize after waiting {timeoutDuration} seconds");
+        }
+        
+        // Clean up pre-spawned agents
+        ClearGameObjects();
+        
+        // Now check PlayerPrefs and update configuration
         CheckPlayerPrefs();
         
-        // Start a new episode
+        // Start a new episode with properly initialized settings
         StartNewEpisode();
     }
 
@@ -337,7 +405,7 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentEpisode >= MaxEpisodes)
         {
-            ExportResultsToCSV();
+            ExportResultsToCSV(true);
             Debug.Log("Max episodes reached. Experiment complete.");
             return;
         }
@@ -765,12 +833,50 @@ public class GameManager : MonoBehaviour
         // Add to our episode stats list
         episodeStats.Add(episodeStat);
         
+        // Export metrics every 5 episodes
+        if (CurrentEpisode % 5 == 0)
+        {
+            ExportResultsToCSV(false);
+        }
+        
         OnScoreUpdate?.Invoke(CurrentStats.runnersWin, CurrentStats.taggersWin);
         OnEpisodeEnd?.Invoke(CurrentStats);
         OnGameEnd?.Invoke();
         
+        // Check if Academy has changed the lesson
+        CheckAcademyLessonUpdate();
+        
         // Start new episode after a delay
         Invoke(nameof(StartNewEpisode), 2f);
+    }
+
+    // Check if the Academy has updated the lesson parameter and apply if needed
+    private void CheckAcademyLessonUpdate()
+    {
+        if (Unity.MLAgents.Academy.IsInitialized)
+        {
+            try
+            {
+                var academyParameters = Academy.Instance.EnvironmentParameters;
+                float lessonParam = academyParameters.GetWithDefault("lesson", -1);
+                
+                if (lessonParam != -1)
+                {
+                    int newLessonIndex = Mathf.FloorToInt(lessonParam);
+                    
+                    if (newLessonIndex != currentLessonIndex)
+                    {
+                        Debug.Log($"Academy changed lesson from {currentLessonIndex} to {newLessonIndex} after episode {CurrentEpisode}");
+                        currentLessonIndex = newLessonIndex;
+                        LoadLessonConfiguration();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error checking Academy lesson parameter: {e.Message}");
+            }
+        }
     }
 
     public bool CheckAllRunnersFrozen()
@@ -881,7 +987,7 @@ public class GameManager : MonoBehaviour
         CurrentStats.totalUnsuccessfulUnfreezeAttempts++;
     }
 
-    private void ExportResultsToCSV()
+    private void ExportResultsToCSV(bool isFinalExport = true)
     {
         StringBuilder sb = new StringBuilder();
         
@@ -899,30 +1005,46 @@ public class GameManager : MonoBehaviour
         sb.AppendLine("------- Summary -------");
         sb.AppendLine($"Total,{CurrentStats.runnersWin},{CurrentStats.taggersWin},{CurrentStats.time},{CurrentStats.freezeballsCollected},{CurrentStats.wallballsCollected},{CurrentStats.totalFreezes},{CurrentStats.totalUnfreezes},{CurrentStats.episodeLength},{CurrentStats.wallsUsed},{CurrentStats.freezeballsUsed},{CurrentStats.freezeballsHit},{CurrentStats.freezeByTouch},{CurrentStats.frozenAgentsAtEndOfEpisode},{CurrentStats.totalTimeSpentFreezing},{CurrentStats.fastestUnfreeze},{CurrentStats.avgUnfreezeTime},{CurrentStats.totalWallHitsToTagger},{CurrentStats.totalWallHitsToFreezeBallProjectile},{CurrentStats.totalUnsuccessfulUnfreezeAttempts},{CurrentStats.longestSurviveFromUnfreeze},{CurrentStats.shortestSurviveFromUnfreeze}");
         
-        // Define file path with timestamp
-        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string filePath = Path.Combine(Application.persistentDataPath, $"FreezeTagResults_{timestamp}.csv");
-        
         try
         {
-            // Write to file
-            File.WriteAllText(filePath, sb.ToString());
-            Debug.Log($"Results exported to {filePath}");
+            // Write to the same file each time
+            File.WriteAllText(csvFilePath, sb.ToString());
             
-            // Also log the path to the Unity Editor console
-            Debug.Log($"CSV file location: {Application.persistentDataPath}");
+            if (isFinalExport)
+            {
+                Debug.Log($"Final results exported to {csvFilePath}");
+            }
+            else
+            {
+                Debug.Log($"Progress checkpoint exported to {csvFilePath} (Episode {CurrentEpisode})");
+            }
         }
         catch (Exception e)
         {
             Debug.LogError($"Failed to export results: {e.Message}");
         }
     }
-
+    
+    // Helper function to generate a random hash
+    private string GenerateRandomHash(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        System.Random random = new System.Random();
+        
+        char[] hash = new char[length];
+        for (int i = 0; i < length; i++)
+        {
+            hash[i] = chars[random.Next(chars.Length)];
+        }
+        
+        return new string(hash);
+    }
+    
     // Add method to return to main menu
     public void ReturnToMainMenu()
     {
-        // Optionally export results before leaving
-        ExportResultsToCSV();
+        // Export final results before leaving
+        ExportResultsToCSV(true);
         
         // Clean up the singleton instance
         Instance = null;
