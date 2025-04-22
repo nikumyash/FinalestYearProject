@@ -19,6 +19,9 @@ public class MainMenuManager : MonoBehaviour
     
     private void Start()
     {
+        // Clear all PlayerPrefs data at startup
+        PlayerPrefs.DeleteAll();
+        
         // Load lesson names from the environment_param.json file
         LoadLessonNames();
         
@@ -63,15 +66,15 @@ public class MainMenuManager : MonoBehaviour
             heuristicModeDropdown.interactable = false;
         }
         
-        // Load previous values for inputs if available
-        if (runnerModelInput != null && PlayerPrefs.HasKey("RunnerAgentModel"))
+        // Always initialize model inputs as empty
+        if (runnerModelInput != null)
         {
-            runnerModelInput.text = PlayerPrefs.GetString("RunnerAgentModel", "");
+            runnerModelInput.text = "";
         }
         
-        if (taggerModelInput != null && PlayerPrefs.HasKey("TaggerAgentModel"))
+        if (taggerModelInput != null)
         {
-            taggerModelInput.text = PlayerPrefs.GetString("TaggerAgentModel", "");
+            taggerModelInput.text = "";
         }
         
         // Set up play button and input field events
