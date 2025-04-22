@@ -76,7 +76,8 @@ public class GameManager : MonoBehaviour
     public EnvironmentConfig Config { get; private set; }
     public Lesson CurrentLesson { get; private set; }
     public GameStats CurrentStats { get; private set; }
-    public int MaxEpisodes { get; private set; } = 5;
+    [SerializeField] private int maxEpisodes = 5;
+    public int MaxEpisodes { get => maxEpisodes; private set => maxEpisodes = value; }
     public int CurrentEpisode { get; private set; } = 0;
     public float RemainingTime { get; private set; }
     public bool IsGameActive { get; private set; } = false;
@@ -220,17 +221,39 @@ public class GameManager : MonoBehaviour
 
     private void CheckPlayerPrefs()
     {
-        // First check if Academy exists and update max episodes
+        // Check if Academy exists and if it's connected to a Python trainer
         bool academyExists = Unity.MLAgents.Academy.IsInitialized;
-        if (academyExists)
+        bool isConnectedToPython = false;
+        
+        if (academyExists && Academy.Instance != null)
         {
+            try 
+            {
+                // Try to detect if we're in training mode (connected to Python)
+                // During training, the Academy will initialize differently than in inference
+                isConnectedToPython = Academy.Instance.IsCommunicatorOn;
+                
+                Debug.Log($"Academy.IsInitialized: {academyExists}, IsCommunicatorOn: {isConnectedToPython}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error checking Academy connection: {e.Message}");
+                isConnectedToPython = false;
+            }
+        }
+        
+        // Only set unlimited episodes if truly connected to Python trainer
+        if (academyExists && isConnectedToPython)
+        {
+            Debug.Log($"Before change: MaxEpisodes = {MaxEpisodes}");
             MaxEpisodes = int.MaxValue;
-            Debug.Log("Academy found, setting unlimited episodes");
+            Debug.Log($"After change: Python trainer connected, setting unlimited episodes (MaxEpisodes = {MaxEpisodes})");
             
             // Try to get the lesson from Academy
             try 
             {
                 var academyParameters = Academy.Instance.EnvironmentParameters;
+                Debug.Log($"Academy parameters accessed successfully: {academyParameters != null}");
                 if (academyParameters.GetWithDefault("lesson", -1) != -1)
                 {
                     int newLessonIndex = Mathf.FloorToInt(academyParameters.GetWithDefault("lesson", currentLessonIndex));
@@ -256,8 +279,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            MaxEpisodes = 5;
-            Debug.Log("Academy not found, setting max episodes to 5");
+            // Make sure MaxEpisodes is set to the inspector value if not in Python training
+            Debug.Log($"No Python trainer detected, using standard episode limit: {maxEpisodes}");
         }
         
         // If Academy doesn't exist or doesn't specify a lesson, check PlayerPrefs
@@ -283,15 +306,35 @@ public class GameManager : MonoBehaviour
             string modelName = PlayerPrefs.GetString("RunnerAgentModel", "");
             if (!string.IsNullOrEmpty(modelName))
             {
-                // Load the model from Resources/Models/Runner folder
-                runnerModel = Resources.Load<ModelAsset>($"Models/Runner/{modelName}");
-                if (runnerModel != null)
+                try
                 {
-                    Debug.Log($"Loaded Runner Model: {modelName}");
+                    // Log the exact path we're trying to load
+                    string resourcePath = $"Models/Runner/{modelName}";
+                    Debug.Log($"Attempting to load Runner model from resource path: {resourcePath}");
+                    
+                    // Check if the model exists as a resource
+                    var modelTextAsset = Resources.Load<TextAsset>(resourcePath);
+                    if (modelTextAsset == null)
+                    {
+                        Debug.LogWarning($"Runner model not found as TextAsset at path: {resourcePath}");
+                    }
+                    
+                    // Try to load as ModelAsset (Sentis)
+                    runnerModel = Resources.Load<ModelAsset>(resourcePath);
+                    
+                    if (runnerModel != null)
+                    {
+                        Debug.Log($"Successfully loaded Runner Model: {modelName}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to load Runner Model: {modelName} - Model loaded as null");
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    Debug.LogWarning($"Failed to load Runner Model: {modelName}");
+                    Debug.LogError($"Exception loading Runner Model: {modelName} - {e.Message}\n{e.StackTrace}");
+                    runnerModel = null;
                 }
             }
         }
@@ -301,15 +344,35 @@ public class GameManager : MonoBehaviour
             string modelName = PlayerPrefs.GetString("TaggerAgentModel", "");
             if (!string.IsNullOrEmpty(modelName))
             {
-                // Load the model from Resources/Models/Tagger folder
-                taggerModel = Resources.Load<ModelAsset>($"Models/Tagger/{modelName}");
-                if (taggerModel != null)
+                try
                 {
-                    Debug.Log($"Loaded Tagger Model: {modelName}");
+                    // Log the exact path we're trying to load
+                    string resourcePath = $"Models/Tagger/{modelName}";
+                    Debug.Log($"Attempting to load Tagger model from resource path: {resourcePath}");
+                    
+                    // Check if the model exists as a resource
+                    var modelTextAsset = Resources.Load<TextAsset>(resourcePath);
+                    if (modelTextAsset == null)
+                    {
+                        Debug.LogWarning($"Tagger model not found as TextAsset at path: {resourcePath}");
+                    }
+                    
+                    // Try to load as ModelAsset (Sentis)
+                    taggerModel = Resources.Load<ModelAsset>(resourcePath);
+                    
+                    if (taggerModel != null)
+                    {
+                        Debug.Log($"Successfully loaded Tagger Model: {modelName}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to load Tagger Model: {modelName} - Model loaded as null");
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    Debug.LogWarning($"Failed to load Tagger Model: {modelName}");
+                    Debug.LogError($"Exception loading Tagger Model: {modelName} - {e.Message}\n{e.StackTrace}");
+                    taggerModel = null;
                 }
             }
         }
@@ -332,6 +395,12 @@ public class GameManager : MonoBehaviour
             {
                 EndEpisode(true); // Runners win when time expires
             }
+        }
+        
+        // Temporary: Press Ctrl+M to clear model references
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.M))
+        {
+            ClearModelReferences();
         }
     }
 
@@ -403,6 +472,7 @@ public class GameManager : MonoBehaviour
 
     public void StartNewEpisode()
     {
+        Debug.Log($"StartNewEpisode: CurrentEpisode={CurrentEpisode}, MaxEpisodes={MaxEpisodes}, Type={MaxEpisodes.GetType()}");
         if (CurrentEpisode >= MaxEpisodes)
         {
             ExportResultsToCSV(true);
@@ -1076,5 +1146,14 @@ public class GameManager : MonoBehaviour
         {
             Instance = null;
         }
+    }
+
+    // Add this method to your GameManager
+    public void ClearModelReferences()
+    {
+        PlayerPrefs.DeleteKey("RunnerAgentModel");
+        PlayerPrefs.DeleteKey("TaggerAgentModel");
+        PlayerPrefs.Save();
+        Debug.Log("Cleared model references from PlayerPrefs");
     }
 } 

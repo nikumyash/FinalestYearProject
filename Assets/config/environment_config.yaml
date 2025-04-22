@@ -48,7 +48,7 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    max_steps: 4000000
+    max_steps: 10000000
     time_horizon: 64
     summary_freq: 20000
     checkpoint_interval: 40000
@@ -57,29 +57,45 @@ behaviors:
 environment_parameters:
   lesson:
     curriculum:
-      - name: Lesson0_easy
+      - name: Lesson1_Introduction
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 1
-          threshold: 0
+          min_lesson_length: 100
+          threshold: 0.8
           require_reset: true
         value: 0.0
-      - name: Lesson0_medium
+      - name: Lesson2_Basic
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 1
-          threshold: 0
+          min_lesson_length: 120
+          threshold: 1.5
           require_reset: true
-        value: 0.5
-      - name: Lesson1_base
+        value: 1.0
+      - name: Lesson3_Intermediate
+        completion_criteria:
+          measure: reward
+          behavior: RunnerBehavior
+          min_lesson_length: 150
+          threshold: 2.5
+          require_reset: true
+        value: 2.0
+      - name: Lesson4_Advanced
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
           min_lesson_length: 200
-          threshold: 2.5
+          threshold: 3.5
           require_reset: true
-        value: 1.0
-      - name: Lesson1_hard
-        value: 1.5
+        value: 3.0
+      - name: Lesson5_Expert
+        completion_criteria:
+          measure: reward
+          behavior: RunnerBehavior
+          min_lesson_length: 250
+          threshold: 4.5
+          require_reset: true
+        value: 4.0
+      - name: Lesson6_Master
+        value: 5.0
