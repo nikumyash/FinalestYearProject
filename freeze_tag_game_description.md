@@ -70,24 +70,44 @@ The game consists of two competing agent types:
 |-----------------|------------------|-------|
 | Team Loss | When runners win the episode | -2.0 |
 
-## Updated Curriculum Configuration
+## Curriculum Design
 
-The curriculum has been enhanced with a more progressive difficulty scale:
+The game uses a progressive curriculum with lessons that increase in difficulty. Progression between lessons is based on both runner and tagger performance, ensuring balanced agent development.
 
-| Parameter | Lesson1_Introduction | Lesson2_Basic | Lesson3_Intermediate | Lesson4_Advanced | Lesson5_Expert | Lesson6_Master |
-|-----------|---------------------|--------------|---------------------|-----------------|---------------|---------------|
-| Number of Runners | 3.0 | 4.0 | 5.0 | 5.0 | 6.0 | 7.0 |
-| Number of Taggers | 2.0 | 3.0 | 3.0 | 4.0 | 5.0 | 5.0 |
-| Number of Wall Balls | 8.0 | 8.0 | 7.0 | 6.0 | 5.0 | 4.0 |
-| Number of Freezeballs | 6.0 | 7.0 | 7.0 | 8.0 | 10.0 | 12.0 |
-| Time Limit | 120.0 | 100.0 | 90.0 | 80.0 | 70.0 | 60.0 |
-| Max Wall Balls | 2 | 3 | 3 | 2 | 2 | 1 |
-| Max Freezeballs | 2 | 2 | 3 | 3 | 3 | 4 |
-| Wall Cooldown | 2.0 | 1.5 | 1.2 | 1.0 | 1.0 | 1.5 |
-| Shoot Cooldown | 2.0 | 1.5 | 1.2 | 1.0 | 0.8 | 0.6 |
+### Lesson Progression Requirements
+
+| Lesson | Runner Threshold (Reference) | Tagger Reward Threshold | Expected Performance |
+|--------|------------------------|------------------------|-------------|
+| Lesson1_Introduction | 0.8 | 0.3 | Basic tagger shooting skills (3-5 shots), minimal freezes |
+| Lesson2_Basic | 1.5 | 0.7 | 5-7 shots, at least 1 freeze per episode |
+| Lesson3_Intermediate | 2.5 | 1.2 | Consistent freezing (1-2 per episode), strategic shooting |
+| Lesson4_Advanced | 3.5 | 1.8 | Multiple freezes per episode, coordinated team play beginning |
+| Lesson5_Expert | 4.5 | 2.5 | Coordinated team tactics, occasional team victories |
+| Lesson6_Master | - | - | Master level with maximum difficulty |
+
+### Environment Parameters
+
+| Parameter | Lesson1 | Lesson2 | Lesson3 | Lesson4 | Lesson5 | Lesson6 |
+|-----------|---------|---------|---------|---------|---------|---------|
+| Runners | 2 | 3 | 4 | 5 | 6 | 7 |
+| Taggers | 2 | 3 | 3 | 4 | 5 | 5 |
+| Wall Balls | 4 | 5 | 6 | 6 | 5 | 4 |
+| Freeze Balls | 8 | 9 | 8 | 8 | 10 | 12 |
+| Time Limit (sec) | 90 | 100 | 90 | 80 | 70 | 60 |
+| Max Wall Balls | 1 | 2 | 2 | 2 | 2 | 1 |
+| Max Freeze Balls | 3 | 3 | 3 | 3 | 3 | 4 |
+| Wall Cooldown (sec) | 3.0 | 2.0 | 1.5 | 1.0 | 1.0 | 1.5 |
+| Shoot Cooldown (sec) | 1.5 | 1.5 | 1.2 | 1.0 | 0.8 | 0.6 |
 | Freezeball Speed | 20.0 | 25.0 | 30.0 | 35.0 | 45.0 | 50.0 |
-| Wall Lifetime | 5.0 | 4.0 | 3.0 | 2.5 | 2.0 | 1.5 |
-| Reward Threshold | 0.8 | 1.5 | 2.5 | 3.5 | 4.5 | N/A |
+| Wall Lifetime (sec) | 4.0 | 4.0 | 3.0 | 2.5 | 2.0 | 1.5 |
+
+The early levels are balanced to give taggers better chances of success, with:
+- Fewer runners to chase
+- More freeze balls available
+- Reduced wall ball capabilities for runners
+- Longer wall cooldowns for runners
+
+As the curriculum progresses, runners gain more advantages to balance the increasing freezeball speeds and tagger numbers.
 
 ## Freeze Tag Game Metrics
 

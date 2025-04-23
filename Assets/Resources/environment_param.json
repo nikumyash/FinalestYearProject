@@ -2,44 +2,44 @@
   "lessons": [
     {
       "name": "Lesson1_Introduction",
-      "num_runners": 3.0,
+      "num_runners": 2.0,
       "num_taggers": 2.0,
-      "num_wallballs": 8.0,
-      "num_freezeballs": 6.0,
-      "time_limit": 120.0,
-      "max_wallballs": 2,
-      "max_freezeballs": 2,
-      "wall_cooldown": 2.0,
-      "shoot_cooldown": 2.0,
-      "freezeball_speed": 3.0,
-      "wall_lifetime": 5.0
+      "num_wallballs": 4.0,
+      "num_freezeballs": 8.0,
+      "time_limit": 90.0,
+      "max_wallballs": 1,
+      "max_freezeballs": 3,
+      "wall_cooldown": 3.0,
+      "shoot_cooldown": 1.5,
+      "freezeball_speed": 20.0,
+      "wall_lifetime": 4.0
     },
     {
       "name": "Lesson2_Basic",
-      "num_runners": 4.0,
+      "num_runners": 3.0,
       "num_taggers": 3.0,
-      "num_wallballs": 8.0,
-      "num_freezeballs": 7.0,
+      "num_wallballs": 5.0,
+      "num_freezeballs": 9.0,
       "time_limit": 100.0,
-      "max_wallballs": 3,
-      "max_freezeballs": 2,
-      "wall_cooldown": 1.5,
+      "max_wallballs": 2,
+      "max_freezeballs": 3,
+      "wall_cooldown": 2.0,
       "shoot_cooldown": 1.5,
-      "freezeball_speed": 3.5,
+      "freezeball_speed": 25.0,
       "wall_lifetime": 4.0
     },
     {
       "name": "Lesson3_Intermediate",
-      "num_runners": 5.0,
+      "num_runners": 4.0,
       "num_taggers": 3.0,
-      "num_wallballs": 7.0,
-      "num_freezeballs": 7.0,
+      "num_wallballs": 6.0,
+      "num_freezeballs": 8.0,
       "time_limit": 90.0,
-      "max_wallballs": 3,
+      "max_wallballs": 2,
       "max_freezeballs": 3,
-      "wall_cooldown": 1.2,
+      "wall_cooldown": 1.5,
       "shoot_cooldown": 1.2,
-      "freezeball_speed": 4.0,
+      "freezeball_speed": 30.0,
       "wall_lifetime": 3.0
     },
     {
@@ -53,7 +53,7 @@
       "max_freezeballs": 3,
       "wall_cooldown": 1.0,
       "shoot_cooldown": 1.0,
-      "freezeball_speed": 4.5,
+      "freezeball_speed": 35.0,
       "wall_lifetime": 2.5
     },
     {
@@ -67,7 +67,7 @@
       "max_freezeballs": 3,
       "wall_cooldown": 1.0,
       "shoot_cooldown": 0.8,
-      "freezeball_speed": 5.0,
+      "freezeball_speed": 45.0,
       "wall_lifetime": 2.0
     },
     {
@@ -81,7 +81,7 @@
       "max_freezeballs": 4,
       "wall_cooldown": 1.5,
       "shoot_cooldown": 0.6,
-      "freezeball_speed": 40,
+      "freezeball_speed": 50.0,
       "wall_lifetime": 1.5
     }
   ],

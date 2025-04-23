@@ -60,41 +60,41 @@ environment_parameters:
       - name: Lesson1_Introduction
         completion_criteria:
           measure: reward
-          behavior: RunnerBehavior
+          behavior: TaggerBehavior
           min_lesson_length: 100
-          threshold: 0.8
+          threshold: 0.3
           require_reset: true
         value: 0.0
       - name: Lesson2_Basic
         completion_criteria:
           measure: reward
-          behavior: RunnerBehavior
+          behavior: TaggerBehavior
           min_lesson_length: 100
-          threshold: 1.5
+          threshold: 0.7
           require_reset: true
         value: 1.0
       - name: Lesson3_Intermediate
         completion_criteria:
           measure: reward
-          behavior: RunnerBehavior
+          behavior: TaggerBehavior
           min_lesson_length: 100
-          threshold: 2.5
+          threshold: 1.2
           require_reset: true
         value: 2.0
       - name: Lesson4_Advanced
         completion_criteria:
           measure: reward
-          behavior: RunnerBehavior
+          behavior: TaggerBehavior
           min_lesson_length: 100
-          threshold: 3.5
+          threshold: 1.8
           require_reset: true
         value: 3.0
       - name: Lesson5_Expert
         completion_criteria:
           measure: reward
-          behavior: RunnerBehavior
+          behavior: TaggerBehavior
           min_lesson_length: 100
-          threshold: 4.5
+          threshold: 2.5
           require_reset: true
         value: 4.0
       - name: Lesson6_Master
