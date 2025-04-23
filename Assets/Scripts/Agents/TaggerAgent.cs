@@ -228,6 +228,10 @@ public class TaggerAgent : Agent
         // Reduce ammo
         currentFreezeBalls--;
         
+        // Reward for shooting freeze ball
+        AddReward(0.1f);
+        Debug.Log("Rewarding tagger for shooting freeze ball: +0.1");
+        
         Debug.Log($"Tagger shooting freeze ball. Remaining: {currentFreezeBalls}");
         
         // Create freeze ball projectile
@@ -320,9 +324,8 @@ public class TaggerAgent : Agent
             currentFreezeBalls++;
             Destroy(other.gameObject);
             
-            // Reward for collecting freeze ball
-            AddReward(0.2f);
-            Debug.Log("Rewarding tagger for collecting freeze ball: +0.2");
+            // Removed reward for collecting freeze ball
+            // Debug.Log("Rewarding tagger for collecting freeze ball: +0.2");
             
             OnFreezeBallCollected?.Invoke();
             
