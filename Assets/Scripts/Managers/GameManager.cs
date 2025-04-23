@@ -764,7 +764,7 @@ public class GameManager : MonoBehaviour
             freezeball.transform.localScale *= sizeMultiplier;
         }
         
-        freezeballs.Add(freezeball);
+            freezeballs.Add(freezeball);
     }
 
     private IEnumerator RespawnWallBallAfterDelay(float delay)
