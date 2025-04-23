@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Demonstrations;
 using Unity.MLAgents.Policies;
 using Unity.Sentis;
 using System.Text;
