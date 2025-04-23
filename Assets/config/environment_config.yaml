@@ -26,7 +26,7 @@ behaviors:
     time_horizon: 64
     summary_freq: 20000
     checkpoint_interval: 40000
-    keep_checkpoints: 250
+    keep_checkpoints: 100
 
   TaggerBehavior:
     trainer_type: ppo
@@ -52,7 +52,7 @@ behaviors:
     time_horizon: 64
     summary_freq: 20000
     checkpoint_interval: 40000
-    keep_checkpoints: 250
+    keep_checkpoints: 100
     
 environment_parameters:
   lesson:
@@ -69,7 +69,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 120
+          min_lesson_length: 100
           threshold: 1.5
           require_reset: true
         value: 1.0
@@ -77,7 +77,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 130
+          min_lesson_length: 100
           threshold: 2.5
           require_reset: true
         value: 2.0
@@ -85,7 +85,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 140
+          min_lesson_length: 100
           threshold: 3.5
           require_reset: true
         value: 3.0
@@ -93,7 +93,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 150
+          min_lesson_length: 100
           threshold: 4.5
           require_reset: true
         value: 4.0
