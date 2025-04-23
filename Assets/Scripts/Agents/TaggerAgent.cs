@@ -218,48 +218,58 @@ public class TaggerAgent : Agent
     
     private void ShootFreezeBall()
     {
-        // Check if we can shoot and have ammo
-        if (!canShoot || currentFreezeBalls <= 0) return;
+        // Check if we can shoot based on cooldown and freezeball count
+        if (!canShoot || currentFreezeBalls <= 0)
+        {
+            return;
+        }
         
-        // Set cooldown
-        canShoot = false;
-        shootCooldownTimer = shootCooldown;
-        
-        // Reduce ammo
+        // Consume a freeze ball
         currentFreezeBalls--;
         
-        // Reward for shooting freeze ball
-        AddReward(0.1f);
-        Debug.Log("Rewarding tagger for shooting freeze ball: +0.1");
-        
-        Debug.Log($"Tagger shooting freeze ball. Remaining: {currentFreezeBalls}");
-        
-        // Create freeze ball projectile
-        if (freezeBallSpawnPoint != null && freezeBallPrefab != null)
+        // Create a freeze ball projectile
+        if (freezeBallPrefab != null && freezeBallSpawnPoint != null)
         {
             GameObject freezeBall = Instantiate(freezeBallPrefab, freezeBallSpawnPoint.position, freezeBallSpawnPoint.rotation);
             
-            // Set it as a projectile
+            // Set as projectile
             FreezeBall freezeBallComponent = freezeBall.GetComponent<FreezeBall>();
             if (freezeBallComponent != null)
             {
                 freezeBallComponent.SetAsProjectile(true);
-                // Pass a reference to this agent to the freeze ball component
                 freezeBallComponent.SetOwner(this);
             }
             
+            // Apply size multiplier from current lesson
+            if (GameManager.Instance != null && GameManager.Instance.CurrentLesson != null)
+            {
+                float sizeMultiplier = GameManager.Instance.CurrentLesson.freezeball_size_multiplier;
+                freezeBall.transform.localScale *= sizeMultiplier;
+            }
+            
+            // Add force to the freeze ball
             Rigidbody rb = freezeBall.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                // Launch the freeze ball
-                rb.velocity = transform.forward * freezeBallSpeed;
+                rb.AddForce(freezeBallSpawnPoint.forward * freezeBallSpeed, ForceMode.Impulse);
                 
-                // Set freeze ball to destroy after lifetime
+                // Add a slight upward arc for better gameplay
+                rb.AddForce(Vector3.up * 2.0f, ForceMode.Impulse);
+                
+                // Destroy after lifetime
                 Destroy(freezeBall, freezeBallLifetime);
             }
         }
         
+        // Trigger event
         OnFreezeBallShot?.Invoke();
+        
+        // Apply a small amount of reward for using a freeze ball, to encourage shooting
+        AddReward(0.1f);
+        
+        // Start cooldown
+        canShoot = false;
+        shootCooldownTimer = shootCooldown;
     }
     
     // Add OnCollisionEnter to handle non-trigger collisions

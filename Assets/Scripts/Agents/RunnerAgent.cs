@@ -96,6 +96,16 @@ public class RunnerAgent : Agent
             {
                 maxWallBalls = GameManager.Instance.CurrentLesson.max_wallballs;
                 wallCooldown = GameManager.Instance.CurrentLesson.wall_cooldown;
+                
+                // Apply runner speed multiplier to agent movement
+                if (agentMovement != null)
+                {
+                    float originalSpeed = agentMovement.GetMoveSpeed();
+                    float multiplier = GameManager.Instance.CurrentLesson.runner_speed_multiplier;
+                    agentMovement.SetMoveSpeed(originalSpeed * multiplier);
+                    Debug.Log($"Runner speed adjusted: original={originalSpeed}, multiplier={multiplier}, final={originalSpeed * multiplier}");
+                }
+                
                 Debug.Log($"Runner using lesson parameters: maxWallBalls={maxWallBalls}, wallCooldown={wallCooldown}");
             }
         }

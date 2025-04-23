@@ -82,4 +82,18 @@ public class AgentMovement : MonoBehaviour
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
     }
+    
+    // Getter method for move speed
+    public float GetMoveSpeed()
+    {
+        return moveSpeed;
+    }
+    
+    // Setter method for move speed
+    public void SetMoveSpeed(float newSpeed)
+    {
+        moveSpeed = newSpeed;
+        // Also update strafe speed proportionally
+        strafeSpeed = newSpeed * 0.6f;
+    }
 } 

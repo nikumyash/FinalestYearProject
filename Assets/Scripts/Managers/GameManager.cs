@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
         public float shoot_cooldown;
         public float freezeball_speed;
         public float wall_lifetime;
+        public float runner_speed_multiplier;
+        public float freezeball_size_multiplier;
     }
 
     [System.Serializable]
@@ -322,12 +324,12 @@ public class GameManager : MonoBehaviour
                     // Try to load as ModelAsset (Sentis)
                     runnerModel = Resources.Load<ModelAsset>(resourcePath);
                     
-                    if (runnerModel != null)
-                    {
+                if (runnerModel != null)
+                {
                         Debug.Log($"Successfully loaded Runner Model: {modelName}");
-                    }
-                    else
-                    {
+                }
+                else
+                {
                         Debug.LogWarning($"Failed to load Runner Model: {modelName} - Model loaded as null");
                     }
                 }
@@ -360,12 +362,12 @@ public class GameManager : MonoBehaviour
                     // Try to load as ModelAsset (Sentis)
                     taggerModel = Resources.Load<ModelAsset>(resourcePath);
                     
-                    if (taggerModel != null)
-                    {
+                if (taggerModel != null)
+                {
                         Debug.Log($"Successfully loaded Tagger Model: {modelName}");
-                    }
-                    else
-                    {
+                }
+                else
+                {
                         Debug.LogWarning($"Failed to load Tagger Model: {modelName} - Model loaded as null");
                     }
                 }
@@ -464,7 +466,9 @@ public class GameManager : MonoBehaviour
             wall_cooldown = 1f,
             shoot_cooldown = 1f,
             freezeball_speed = 4.0f,
-            wall_lifetime = 3.0f
+            wall_lifetime = 3.0f,
+            runner_speed_multiplier = 1.0f,
+            freezeball_size_multiplier = 1.0f
         };
         
         Debug.Log("Using default lesson (Default)");
@@ -687,12 +691,23 @@ public class GameManager : MonoBehaviour
 
     private void SpawnFreezeballs(int count)
     {
+        if (freezeballPrefab == null || itemSpawnArea == null) return;
+        
         for (int i = 0; i < count; i++)
         {
-            if (itemSpawnArea == null) break;
+            Vector3 spawnPosition = GetRandomPositionInBounds(itemSpawnArea.bounds);
+            GameObject freezeball = Instantiate(freezeballPrefab, spawnPosition, Quaternion.identity);
             
-            Vector3 spawnPos = GetRandomPositionInBounds(itemSpawnArea.bounds);
-            GameObject freezeball = Instantiate(freezeballPrefab, spawnPos, Quaternion.identity);
+            // Apply size multiplier from current lesson
+            if (CurrentLesson != null)
+            {
+                float sizeMultiplier = CurrentLesson.freezeball_size_multiplier;
+                freezeball.transform.localScale *= sizeMultiplier;
+                
+                // Log the size change for debugging
+                Debug.Log($"Freezeball size adjusted with multiplier: {sizeMultiplier}");
+            }
+            
             freezeballs.Add(freezeball);
         }
     }
@@ -736,12 +751,20 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         
-        if (itemSpawnArea != null)
+        // Only respawn if the game is still active
+        if (!IsGameActive) yield break;
+        
+        Vector3 spawnPosition = GetRandomPositionInBounds(itemSpawnArea.bounds);
+        GameObject freezeball = Instantiate(freezeballPrefab, spawnPosition, Quaternion.identity);
+        
+        // Apply size multiplier from current lesson
+        if (CurrentLesson != null)
         {
-            Vector3 spawnPos = GetRandomPositionInBounds(itemSpawnArea.bounds);
-            GameObject freezeball = Instantiate(freezeballPrefab, spawnPos, Quaternion.identity);
-            freezeballs.Add(freezeball);
+            float sizeMultiplier = CurrentLesson.freezeball_size_multiplier;
+            freezeball.transform.localScale *= sizeMultiplier;
         }
+        
+        freezeballs.Add(freezeball);
     }
 
     private IEnumerator RespawnWallBallAfterDelay(float delay)

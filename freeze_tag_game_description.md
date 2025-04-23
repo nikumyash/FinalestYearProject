@@ -100,14 +100,22 @@ The game uses a progressive curriculum with lessons that increase in difficulty.
 | Shoot Cooldown (sec) | 1.5 | 1.5 | 1.2 | 1.0 | 0.8 | 0.6 |
 | Freezeball Speed | 20.0 | 25.0 | 30.0 | 35.0 | 45.0 | 50.0 |
 | Wall Lifetime (sec) | 4.0 | 4.0 | 3.0 | 2.5 | 2.0 | 1.5 |
+| Runner Speed Multiplier | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | 1.0 |
+| Freezeball Size Multiplier | 2.0 | 1.75 | 1.5 | 1.25 | 1.0 | 1.0 |
 
 The early levels are balanced to give taggers better chances of success, with:
 - Fewer runners to chase
 - More freeze balls available
 - Reduced wall ball capabilities for runners
 - Longer wall cooldowns for runners
+- Runners moving 40% slower in lesson 1
+- Freezeballs being twice as large in lesson 1
 
-As the curriculum progresses, runners gain more advantages to balance the increasing freezeball speeds and tagger numbers.
+As the curriculum progresses, runners gain more advantages through:
+- Increasing speed (from 60% to 100% by lesson 5)
+- Smaller freezeballs (gradually reducing from 2x to normal size)
+- More wall ball capabilities
+- Shorter wall cooldowns
 
 ## Freeze Tag Game Metrics
 
