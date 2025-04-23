@@ -604,6 +604,12 @@ public class GameManager : MonoBehaviour
                     behaviorParams.BehaviorType = Unity.MLAgents.Policies.BehaviorType.HeuristicOnly;
                     runner.name = "Runner_Heuristic";
                     Debug.Log("Runner set to heuristic mode");
+                    
+                    // Add DemonstrationRecorder component for behavior cloning
+                    Unity.MLAgents.Demonstrations.DemonstrationRecorder demoRecorder = runner.AddComponent<Unity.MLAgents.Demonstrations.DemonstrationRecorder>();
+                    demoRecorder.Record = true;
+                    demoRecorder.DemonstrationName = "Runner_Demo_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    Debug.Log("Added DemonstrationRecorder to Runner agent for behavior cloning");
                 }
             }
             
@@ -664,6 +670,12 @@ public class GameManager : MonoBehaviour
                     behaviorParams.BehaviorType = Unity.MLAgents.Policies.BehaviorType.HeuristicOnly;
                     tagger.name = "Tagger_Heuristic";
                     Debug.Log("Tagger set to heuristic mode");
+                    
+                    // Add DemonstrationRecorder component for behavior cloning
+                    Unity.MLAgents.Demonstrations.DemonstrationRecorder demoRecorder = tagger.AddComponent<Unity.MLAgents.Demonstrations.DemonstrationRecorder>();
+                    demoRecorder.Record = true;
+                    demoRecorder.DemonstrationName = "Tagger_Demo_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    Debug.Log("Added DemonstrationRecorder to Tagger agent for behavior cloning");
                 }
             }
             
