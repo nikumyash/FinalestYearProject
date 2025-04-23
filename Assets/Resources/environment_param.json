@@ -81,7 +81,7 @@
       "max_freezeballs": 4,
       "wall_cooldown": 1.5,
       "shoot_cooldown": 0.6,
-      "freezeball_speed": 5.5,
+      "freezeball_speed": 40,
       "wall_lifetime": 1.5
     }
   ],

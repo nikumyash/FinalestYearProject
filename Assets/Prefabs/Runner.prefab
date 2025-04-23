@@ -451,10 +451,10 @@ MonoBehaviour:
   - WallBall
   - FreezeBall
   - FreezeBallProjectile
-  m_RaysPerDirection: 6
-  m_MaxRayDegrees: 70
+  m_RaysPerDirection: 15
+  m_MaxRayDegrees: 180
   m_SphereCastRadius: 1
-  m_RayLength: 20
+  m_RayLength: 30
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
