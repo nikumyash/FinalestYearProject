@@ -393,6 +393,9 @@ public class RunnerAgent : Agent
             // Stop survival timer while frozen
             hasSurvivalTimerStarted = false;
         }
+            // Change tag to "Freezed Runner" when frozen
+        gameObject.tag = "FreezedRunner";
+
         
         isFrozen = true;
         unfreezeCounter = 0f;
@@ -458,7 +461,9 @@ public class RunnerAgent : Agent
             // Update fastest unfreeze time if this one was faster
             GameManager.Instance.CheckFastestUnfreeze(totalFreezeTime);
         }
-        
+            // Change tag to "Runner" when unfrozen
+        gameObject.tag = "Runner";
+
         // Remove freeze effect
         if (freezeEffect != null)
         {
