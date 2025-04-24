@@ -316,10 +316,35 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4066053951575771715, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bhint
+      objectReference: {fileID: 0}
     - target: {fileID: 4102474124010751386, guid: 46202134a5c73e24c918149ccf6b1fa5,
         type: 3}
       propertyPath: m_Name
       value: Environment
+      objectReference: {fileID: 0}
+    - target: {fileID: 5474580573280349380, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bhint
+      objectReference: {fileID: 0}
+    - target: {fileID: 5735871585018488181, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bhint
+      objectReference: {fileID: 0}
+    - target: {fileID: 6475184278229094547, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bhint
+      objectReference: {fileID: 0}
+    - target: {fileID: 6665693637022961093, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bhint
       objectReference: {fileID: 0}
     - target: {fileID: 9002321121274689832, guid: 46202134a5c73e24c918149ccf6b1fa5,
         type: 3}
