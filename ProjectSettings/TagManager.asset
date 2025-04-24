@@ -10,6 +10,7 @@ TagManager:
   - FreezeBallProjectile
   - WallBall
   - Wall
+  - Bhint
   layers:
   - Default
   - TransparentFX

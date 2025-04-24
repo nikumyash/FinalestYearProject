@@ -232,10 +232,11 @@ MonoBehaviour:
   - WallBall
   - FreezeBall
   - FreezeBallProjectile
+  - Bhint
   m_RaysPerDirection: 15
   m_MaxRayDegrees: 180
   m_SphereCastRadius: 1
-  m_RayLength: 25
+  m_RayLength: 50
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
