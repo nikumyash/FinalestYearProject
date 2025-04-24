@@ -54,9 +54,9 @@ behaviors:
         encoding_size: 128
         use_actions: true
         use_vail: false
-        demo_path: Demostrations  # Path to your demonstration data
+        demo_path: Demonstrations  # Path to your demonstration data
     behavioral_cloning:  # Adding behavioral cloning component
-      demo_path: Demostrations
+      demo_path: Demonstrations
       strength: 0.7
       steps: 500000  # Number of steps to use behavioral cloning
       batch_size: 512
