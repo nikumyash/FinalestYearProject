@@ -400,6 +400,9 @@ public class RunnerAgent : Agent
         // Start tracking freeze time
         freezeStartTime = Time.time;
         currentFreezeTime = 0f;
+            // Change tag to "FreezedRunner" when frozen
+        gameObject.tag = "FreezedRunner";
+
         
         // Spawn freeze effect
         if (freezeEffectPrefab != null)
@@ -465,7 +468,9 @@ public class RunnerAgent : Agent
             Destroy(freezeEffect);
             freezeEffect = null;
         }
-        
+                    // Change tag to "Runner" when frozen
+        gameObject.tag = "Runner";
+
         // Hide unfreeze range indicator
         if (unfreezeRangeIndicator != null)
         {

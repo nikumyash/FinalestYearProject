@@ -452,6 +452,7 @@ MonoBehaviour:
   - FreezeBall
   - FreezeBallProjectile
   - Bhint
+  - FreezedRunner
   m_RaysPerDirection: 15
   m_MaxRayDegrees: 180
   m_SphereCastRadius: 1
