@@ -76,4 +76,5 @@ crashlytics-build.properties
 results/
 Assets/NN/
 Assets/Logs
+Demonstrations/
 # End of https://www.toptal.com/developers/gitignore/api/unity
