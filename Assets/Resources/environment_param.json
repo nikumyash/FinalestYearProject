@@ -89,7 +89,7 @@
       "num_runners": 7.0,
       "num_taggers": 5.0,
       "num_wallballs": 4.0,
-      "num_freezeballs": 12.0,
+      "num_freezeballs": 20.0,
       "time_limit": 60.0,
       "max_wallballs": 1,
       "max_freezeballs": 4,
