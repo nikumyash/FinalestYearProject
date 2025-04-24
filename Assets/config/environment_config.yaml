@@ -76,7 +76,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 100
+          min_lesson_length: 400
           threshold: 1.2
           require_reset: true
         value: 0.0
@@ -84,7 +84,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 120
+          min_lesson_length: 250
           threshold: 2.0
           require_reset: true
         value: 1.0
@@ -92,7 +92,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 150
+          min_lesson_length: 200
           threshold: 2.8
           require_reset: true
         value: 2.0
@@ -100,7 +100,7 @@ environment_parameters:
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 180
+          min_lesson_length: 150
           threshold: 3.2
           require_reset: true
         value: 3.0
