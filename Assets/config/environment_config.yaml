@@ -27,7 +27,7 @@ behaviors:
     summary_freq: 20000
     checkpoint_interval: 40000
     keep_checkpoints: 250
-
+  
   TaggerBehavior:
     trainer_type: ppo
     hyperparameters:
@@ -51,7 +51,8 @@ behaviors:
       gail:  # Adding GAIL for imitation learning
         strength: 0.5
         gamma: 0.99
-        encoding_size: 128
+        network_settings:
+          hidden_units: 128  # Replaced encoding_size
         use_actions: true
         use_vail: false
         demo_path: Demonstrations  # Path to your demonstration data
