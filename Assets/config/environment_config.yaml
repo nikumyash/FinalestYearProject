@@ -77,13 +77,5 @@ environment_parameters:
         value: 1.0
         
       - name: Lesson5_Expert
-        completion_criteria:
-          measure: reward
-          behavior: RunnerBehavior
-          min_lesson_length: 600
-          threshold: 2.0
-          require_reset: true
         value: 2.0
         
-      - name: Lesson6_Master
-        value: 3.0

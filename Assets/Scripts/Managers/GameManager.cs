@@ -974,6 +974,7 @@ public class GameManager : MonoBehaviour
     }
     private void SetPercentageFreezed(){
         PercentageFreezed = (float)CurrentFreezeCount/CurrentLesson.num_runners;
+        Debug.Log($"Percentage freezed updated to {PercentageFreezed}");
     }
     public void NotifyFreeze()
     {
