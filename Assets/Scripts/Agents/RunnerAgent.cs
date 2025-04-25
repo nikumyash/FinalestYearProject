@@ -150,10 +150,11 @@ public class RunnerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         // Basic observations
+        float perWalls = (float)currentWallBalls/maxWallBalls;
         sensor.AddObservation(transform.position);
         sensor.AddObservation(transform.forward);
         sensor.AddObservation(isFrozen ? 1 : 0);
-        sensor.AddObservation(currentWallBalls);
+        sensor.AddObservation(perWalls);
         sensor.AddObservation(canUseWall);
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs

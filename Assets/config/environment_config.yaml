@@ -1,6 +1,7 @@
 # Freeze Tag Configuration
 # ======================
-
+# Freeze Tag Configuration
+# ======================
 behaviors:
   RunnerBehavior:
     trainer_type: ppo
@@ -27,7 +28,6 @@ behaviors:
     summary_freq: 20000
     checkpoint_interval: 40000
     keep_checkpoints: 250
-  
   TaggerBehavior:
     trainer_type: ppo
     hyperparameters:
@@ -47,22 +47,7 @@ behaviors:
     reward_signals:
       extrinsic:
         gamma: 0.99
-        strength: 0.2          # Further reduced to prioritize imitation learning
-      gail:
-        strength: 0.8          # Increased for stronger imitation learning
-        gamma: 0.99
-        network_settings:
-          hidden_units: 512    # Match policy network size
-        use_actions: true
-        use_vail: false
-        demo_path: Demonstrations
-    behavioral_cloning:
-      demo_path: Demonstrations
-      strength: 1.2            # Increased above 1.0 to strongly prioritize demonstration learning
-      steps: 1200000           # Extended BC phase
-      batch_size: 512
-      num_epoch: 5
-      samples_per_update: 0
+        strength: 1.0          # Adjusted back to standard value
     max_steps: 10000000
     time_horizon: 64
     summary_freq: 20000
@@ -73,59 +58,32 @@ environment_parameters:
   lesson:
     curriculum:
       # Adding a simpler initial lesson for better early learning
-      - name: Lesson0_InitialImitation 
+      - name: Lesson3_Intermediate
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
-          min_lesson_length: 800  # Very long initial phase focused on learning basics
-          threshold: 0.7          # Lower threshold
+          min_lesson_length: 800
+          threshold: 2.0
           require_reset: true
-        value: 0.0                # Maps to a new simplified initial environment
+        value: 0.0
         
-      - name: Lesson1_Introduction
+      - name: Lesson4_Advanced
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
           min_lesson_length: 600
-          threshold: 1.0
+          threshold: 2.5
           require_reset: true
         value: 1.0
         
-      - name: Lesson2_Basic
-        completion_criteria:
-          measure: reward
-          behavior: RunnerBehavior
-          min_lesson_length: 500
-          threshold: 1.5
-          require_reset: true
-        value: 2.0
-        
-      - name: Lesson3_Intermediate
+      - name: Lesson5_Expert
         completion_criteria:
           measure: reward
           behavior: RunnerBehavior
           min_lesson_length: 400
           threshold: 2.0
           require_reset: true
-        value: 3.0
-        
-      - name: Lesson4_Advanced
-        completion_criteria:
-          measure: reward
-          behavior: RunnerBehavior
-          min_lesson_length: 300
-          threshold: 2.5
-          require_reset: true
-        value: 4.0
-        
-      - name: Lesson5_Expert
-        completion_criteria:
-          measure: reward
-          behavior: RunnerBehavior
-          min_lesson_length: 200
-          threshold: 2.0
-          require_reset: true
-        value: 5.0
+        value: 2.0
         
       - name: Lesson6_Master
-        value: 6.0
+        value: 3.0
