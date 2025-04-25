@@ -105,6 +105,8 @@ public class GameManager : MonoBehaviour
     private ModelAsset runnerModel;
     private ModelAsset taggerModel;
     
+    private int CurrentFreezeCount = 0;
+    private float PercentageFreezed = 0f;
     // Heuristic mode settings
     private int heuristicMode = 0; // 0: None, 1: Runner, 2: Tagger
     
@@ -531,6 +533,8 @@ public class GameManager : MonoBehaviour
         
         // Reset unfreeze tracking variables
         totalUnfreezeTime = 0f;
+        CurrentFreezeCount = 0;
+        PercentageFreezed = 0f;
         unfreezeCount = 0;
         
         // Note: We don't reset runnersWin and taggersWin as those are cumulative
@@ -755,7 +759,9 @@ public class GameManager : MonoBehaviour
             wallballs.Add(wallball);
         }
     }
-
+    public float GetPercentageFreezed(){
+        return PercentageFreezed;
+    }
     public void EndEpisode(bool runnersWin)
     {
         if (!IsGameActive) return;
@@ -966,10 +972,14 @@ public class GameManager : MonoBehaviour
         
         return frozenCount == runners.Count && runners.Count > 0;
     }
-
+    private void SetPercentageFreezed(){
+        PercentageFreezed = (float)CurrentFreezeCount/CurrentLesson.num_runners;
+    }
     public void NotifyFreeze()
     {
         CurrentStats.totalFreezes++;
+        CurrentFreezeCount++;
+        SetPercentageFreezed();
         
         if (CheckAllRunnersFrozen())
         {
@@ -980,6 +990,8 @@ public class GameManager : MonoBehaviour
     public void NotifyUnfreeze()
     {
         CurrentStats.totalUnfreezes++;
+        CurrentFreezeCount--;
+        SetPercentageFreezed();
     }
 
     public void NotifyFreezeBallCollected()

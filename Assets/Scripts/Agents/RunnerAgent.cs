@@ -156,6 +156,11 @@ public class RunnerAgent : Agent
         sensor.AddObservation(isFrozen ? 1 : 0);
         sensor.AddObservation(perWalls);
         sensor.AddObservation(canUseWall);
+        float PercentageRunnerFreezed = 0f;
+        if (GameManager.Instance != null){
+            PercentageRunnerFreezed = GameManager.Instance.GetPercentageFreezed();
+        }
+        sensor.AddObservation(PercentageRunnerFreezed);
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs
     }
