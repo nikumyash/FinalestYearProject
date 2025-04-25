@@ -2,10 +2,10 @@
   "lessons": [
     {
       "name": "Lesson3_Intermediate",
-      "num_runners": 4.0,
+      "num_runners": 2.0,
       "num_taggers": 3.0,
-      "num_wallballs": 20.0,
-      "num_freezeballs": 30.0,
+      "num_wallballs": 30.0,
+      "num_freezeballs": 40.0,
       "time_limit": 90.0,
       "max_wallballs": 5,
       "max_freezeballs": 6,
@@ -16,10 +16,10 @@
     },
     {
       "name": "Lesson4_Advanced",
-      "num_runners": 5.0,
+      "num_runners": 3.0,
       "num_taggers": 4.0,
-      "num_wallballs": 15.0,
-      "num_freezeballs": 30.0,
+      "num_wallballs": 25.0,
+      "num_freezeballs": 35.0,
       "time_limit": 80.0,
       "max_wallballs": 4,
       "max_freezeballs": 5,
@@ -30,7 +30,7 @@
     },
     {
       "name": "Lesson5_Expert",
-      "num_runners": 6.0,
+      "num_runners": 4.0,
       "num_taggers": 5.0,
       "num_wallballs": 15.0,
       "num_freezeballs": 25.0,
