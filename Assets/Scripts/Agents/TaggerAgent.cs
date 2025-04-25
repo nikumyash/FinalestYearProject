@@ -92,9 +92,10 @@ public class TaggerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         // Basic observations
+        float perfreeze = (float)currentFreezeBalls/maxFreezeBalls;
         sensor.AddObservation(transform.position);
         sensor.AddObservation(transform.forward);
-        sensor.AddObservation(currentFreezeBalls);
+        sensor.AddObservation(perfreeze);
         sensor.AddObservation(canShoot);
         
         // Add more observations as needed for the specific game mechanics

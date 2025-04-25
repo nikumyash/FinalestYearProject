@@ -150,10 +150,11 @@ public class RunnerAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         // Basic observations
+        float perWalls = (float)currentWallBalls/maxWallBalls;
         sensor.AddObservation(transform.position);
         sensor.AddObservation(transform.forward);
         sensor.AddObservation(isFrozen ? 1 : 0);
-        sensor.AddObservation(currentWallBalls);
+        sensor.AddObservation(perWalls);
         sensor.AddObservation(canUseWall);
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs
@@ -393,6 +394,9 @@ public class RunnerAgent : Agent
             // Stop survival timer while frozen
             hasSurvivalTimerStarted = false;
         }
+            // Change tag to "Freezed Runner" when frozen
+        gameObject.tag = "FreezedRunner";
+
         
         isFrozen = true;
         unfreezeCounter = 0f;
@@ -400,9 +404,6 @@ public class RunnerAgent : Agent
         // Start tracking freeze time
         freezeStartTime = Time.time;
         currentFreezeTime = 0f;
-            // Change tag to "FreezedRunner" when frozen
-        gameObject.tag = "FreezedRunner";
-
         
         // Spawn freeze effect
         if (freezeEffectPrefab != null)
@@ -461,16 +462,16 @@ public class RunnerAgent : Agent
             // Update fastest unfreeze time if this one was faster
             GameManager.Instance.CheckFastestUnfreeze(totalFreezeTime);
         }
-        
+            // Change tag to "Runner" when unfrozen
+        gameObject.tag = "Runner";
+
         // Remove freeze effect
         if (freezeEffect != null)
         {
             Destroy(freezeEffect);
             freezeEffect = null;
         }
-                    // Change tag to "Runner" when frozen
-        gameObject.tag = "Runner";
-
+        
         // Hide unfreeze range indicator
         if (unfreezeRangeIndicator != null)
         {
