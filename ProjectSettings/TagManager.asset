@@ -11,6 +11,7 @@ TagManager:
   - WallBall
   - Wall
   - Bhint
+  - FreezedRunner
   layers:
   - Default
   - TransparentFX
