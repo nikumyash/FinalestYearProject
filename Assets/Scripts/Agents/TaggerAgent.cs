@@ -97,6 +97,12 @@ public class TaggerAgent : Agent
         sensor.AddObservation(transform.forward);
         sensor.AddObservation(perfreeze);
         sensor.AddObservation(canShoot);
+        float PercentageRunnerFreezed = 0f;
+        if (GameManager.Instance != null){
+            PercentageRunnerFreezed = GameManager.Instance.GetPercentageFreezed();
+        }
+        sensor.AddObservation(PercentageRunnerFreezed);
+
         
         // Add more observations as needed for the specific game mechanics
         // These will be customized by the user as per their needs

@@ -1,6 +1,7 @@
 # Freeze Tag Configuration
 # ======================
-
+# Freeze Tag Configuration
+# ======================
 behaviors:
   RunnerBehavior:
     trainer_type: ppo
@@ -32,6 +33,7 @@ behaviors:
     trainer_type: ppo
     hyperparameters:
       batch_size: 512
+      buffer_size: 12288       # Increased for better experience diversity
       buffer_size: 12288       # Increased for better experience diversity
       learning_rate: 3.0e-4
       beta: 5.0e-3
@@ -67,6 +69,7 @@ behaviors:
     time_horizon: 64
     summary_freq: 20000
     checkpoint_interval: 40000
+    keep_checkpoints: 250
     keep_checkpoints: 250
     
 environment_parameters:
