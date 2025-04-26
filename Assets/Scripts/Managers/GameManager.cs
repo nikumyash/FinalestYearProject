@@ -134,7 +134,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
+        Time.timeScale = 4f;
         // Initialize stats
         CurrentStats = new GameStats();
         

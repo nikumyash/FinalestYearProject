@@ -316,6 +316,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 957515137030325209, guid: 46202134a5c73e24c918149ccf6b1fa5,
+        type: 3}
+      propertyPath: maxEpisodes
+      value: 26
+      objectReference: {fileID: 0}
     - target: {fileID: 4066053951575771715, guid: 46202134a5c73e24c918149ccf6b1fa5,
         type: 3}
       propertyPath: m_TagString

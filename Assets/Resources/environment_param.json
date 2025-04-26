@@ -1,23 +1,23 @@
 {
   "lessons": [
     {
-      "name": "Lesson3_Intermediate",
-      "num_runners": 2.0,
-      "num_taggers": 3.0,
+      "name": "Lesson1_Basic",
+      "num_runners": 4.0,
+      "num_taggers": 4.0,
       "num_wallballs": 30.0,
       "num_freezeballs": 40.0,
-      "time_limit": 90.0,
-      "max_wallballs": 5,
-      "max_freezeballs": 6,
+      "time_limit": 60.0,
+      "max_wallballs": 3,
+      "max_freezeballs": 3,
       "wall_cooldown": 1.5,
       "shoot_cooldown": 1.2,
       "freezeball_speed": 30.0,
       "wall_lifetime": 3.0
     },
     {
-      "name": "Lesson4_Advanced",
-      "num_runners": 3.0,
-      "num_taggers": 4.0,
+      "name": "Lesson2_Intermediate",
+      "num_runners": 5.0,
+      "num_taggers": 5.0,
       "num_wallballs": 25.0,
       "num_freezeballs": 35.0,
       "time_limit": 80.0,
@@ -29,9 +29,9 @@
       "wall_lifetime": 2.5
     },
     {
-      "name": "Lesson5_Expert",
-      "num_runners": 4.0,
-      "num_taggers": 5.0,
+      "name": "Lesson3_Advance",
+      "num_runners": 6.0,
+      "num_taggers": 6.0,
       "num_wallballs": 15.0,
       "num_freezeballs": 25.0,
       "time_limit": 70.0,
